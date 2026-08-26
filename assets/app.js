@@ -1,354 +1,299 @@
-/* 伴走スタジオ - アプリ本体 */
+/* 探偵手帳 - アプリ本体 */
 'use strict';
 
-const KEY = 'bansou-studio-v1';
+const KEY = 'tantei-techo-v1';
 const $  = (s, r) => (r || document).querySelector(s);
 const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c =>
   ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 const ymd = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-const today = () => ymd(new Date());  // ※ toISOString はUTC基準で日本時間の朝が前日になるため使わない
-const fmtDate = d => d ? d.replace(/-/g, '/').slice(5) : '';
+const today = () => ymd(new Date());
+const fmtDate = d => d ? d.slice(5).replace('-', '/') : '';
+const pick = a => a[Math.floor(Math.random() * a.length)];
 
 /* ========== ストア ========== */
 let S = load();
 
 function blankProfile(name) {
-  return {
-    id: uid(), name: name || '名前未設定', createdAt: today(),
-    diagnosis: null, goal: { why: '', target: '', hours: '', deadline: '' },
-    roadmap: null, logs: [], sessions: []
-  };
+  return { id: uid(), name: name || 'あなた', createdAt: today(),
+    quiz: null, result: null, steps: null, logs: [], sessions: [],
+    goal: { why: '', reward: '', hours: '' } };
 }
 function load() {
   try {
-    const raw = localStorage.getItem(KEY);
-    if (raw) { const d = JSON.parse(raw); if (d && d.profiles) return d; }
-  } catch (e) { console.warn('読み込み失敗', e); }
-  const p = blankProfile('自分');
-  return { v: 1, mode: 'self', activeId: p.id, selfId: p.id, profiles: { [p.id]: p } };
+    const d = JSON.parse(localStorage.getItem(KEY) || 'null');
+    if (d && d.profiles) return d;
+  } catch (e) {}
+  const p = blankProfile('あなた');
+  return { v: 1, theme: 'sepia', dark: 'auto', mode: 'self',
+           activeId: p.id, selfId: p.id, profiles: { [p.id]: p } };
 }
-function save() {
-  try { localStorage.setItem(KEY, JSON.stringify(S)); }
-  catch (e) { alert('保存に失敗しました。ブラウザの容量設定をご確認ください。'); }
-}
+function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
 const P = () => S.profiles[S.activeId] || S.profiles[S.selfId];
 
-/* ========== 採点 ========== */
-function score(answers) {
-  const traits = {}, brakes = {};
-  Q_TRAIT.forEach(([code], i) => {
-    const v = answers['t' + i] || 3;
-    traits[code] = (traits[code] || 0) + v;
-  });
-  Q_BRAKE.forEach(([code], i) => {
-    const v = answers['b' + i] || 3;
-    brakes[code] = (brakes[code] || 0) + v;
-  });
-  const pct = o => { const r = {}; for (const k in o) r[k] = Math.round((o[k] - 2) / 8 * 100); return r; };
-  const tp = pct(traits), bp = pct(brakes);
+/* ========== テーマ ========== */
+function applyTheme() {
+  const t = THEMES[S.theme] || THEMES.sepia;
+  const r = document.documentElement;
+  r.style.setProperty('--acc', t.a);
+  r.style.setProperty('--acc2', t.b);
+  r.dataset.dark = S.dark;
+  const meta = $('meta[name="theme-color"]');
+  if (meta) meta.content = isDark() ? '#1B1A18' : '#F4EFE6';
+}
+const isDark = () => S.dark === 'on' ||
+  (S.dark === 'auto' && matchMedia('(prefers-color-scheme: dark)').matches);
 
-  let best = null, bestScore = -1;
-  for (const code in TYPES) {
-    const w = TYPES[code].w;
-    let s = 0, tot = 0;
-    for (const t in w) { s += (tp[t] || 0) * w[t]; tot += w[t]; }
-    s = s / tot;
-    if (s > bestScore) { bestScore = s; best = code; }
-  }
-  return { answers, traits: tp, brakes: bp, type: best, typeScore: Math.round(bestScore), date: today() };
+/* ========== 採点（4段階 → 0〜100%） ========== */
+function scoreAll(a) {
+  const t = {}, st = {};
+  Q_TRAIT.forEach(([c], i) => { t[c] = (t[c] || 0) + (a['t' + i] || 2); });
+  Q_STYLE.forEach(([c], i) => { st[c] = (st[c] || 0) + (a['s' + i] || 2); });
+  const pct = o => { const r = {}; for (const k in o) r[k] = Math.round((o[k] - 2) / 6 * 100); return r; };
+  const tp = pct(t), sp = pct(st);
+  /* 絶対値で比べると「全部そう」と答えた人が毎回同じ道になってしまうので、
+     本人の平均からの差（＝その人の中での相対的な高さ）で判定する */
+  const vals = Object.values(tp);
+  const mean = vals.reduce((x, y) => x + y, 0) / vals.length;
+  const scored = Object.keys(TYPES).map(code => {
+    const w = TYPES[code].w; let s = 0, tot = 0;
+    for (const k in w) { s += ((tp[k] || 0) - mean) * w[k]; tot += w[k]; }
+    return { code, s: s / tot };
+  }).sort((x, y) => y.s - x.s);
+  /* ほぼ同点のときは、その人のいちばん高い持ち味を使う道を選ぶ */
+  const top1 = Object.entries(tp).sort((x, y) => y[1] - x[1])[0][0];
+  const near = scored.filter(x => scored[0].s - x.s < 0.5);
+  /* ほぼ全部同じ回答だった場合は判定材料がないので、いちばん始めやすい「伝える道」にする */
+  const flat = scored[0].s < 0.5;
+  const best = flat ? 'content' : (near.find(x => TYPES[x.code].w[top1]) || scored[0]).code;
+  return { traits: tp, styles: sp, type: best, date: today() };
 }
-const rank = o => Object.entries(o).sort((a, b) => b[1] - a[1]);
+const rank = o => Object.entries(o).sort((x, y) => y[1] - x[1]);
 
-/* ========== ロードマップ生成 ========== */
-function buildRoadmap(type) {
-  return PHASES.map(ph => ({
-    id: ph.id,
-    tasks: [...(COMMON_TASKS[ph.id] || []), ...((TYPE_TASKS[type] || {})[ph.id] || [])]
-      .map(t => ({ id: uid(), text: t, done: false, doneAt: null }))
-  }));
+/* ========== 一手（9つ） ========== */
+function buildSteps(type) {
+  const ts = TYPE_STEPS[type] || {};
+  return CHAPTERS.map(ch => ({ id: ch.id,
+    items: [COMMON_STEPS[ch.id], ...(ts[ch.id] || [])]
+      .map(x => ({ id: uid(), text: x, done: false, at: null })) }));
 }
-function allTasks(p) {
-  if (!p.roadmap) return [];
-  const out = [];
-  p.roadmap.forEach((ph, i) => ph.tasks.forEach(t => out.push({ ...t, phase: i })));
-  return out;
+function flat(p) {
+  if (!p.steps) return [];
+  const o = []; p.steps.forEach((c, i) => c.items.forEach(x => o.push({ ...x, ci: i })));
+  return o;
 }
-function nextTask(p) { return allTasks(p).find(t => !t.done) || null; }
-function progress(p) {
-  const a = allTasks(p);
-  return a.length ? Math.round(a.filter(t => t.done).length / a.length * 100) : 0;
-}
-function streak(p) {
-  const days = new Set(p.logs.filter(l => l.done).map(l => l.date));
-  let n = 0, d = new Date();
-  for (;;) {
-    const s = ymd(d);
-    if (days.has(s)) { n++; d.setDate(d.getDate() - 1); }
-    else if (n === 0 && s === today()) { d.setDate(d.getDate() - 1); }
-    else break;
-    if (n > 400) break;
-  }
-  return n;
-}
+const nextStep = p => flat(p).find(x => !x.done) || null;
+const doneCount = p => flat(p).filter(x => x.done).length;
+const totalCount = p => flat(p).length;
+/* ※「連続」は休むと0に戻って気が重いので、減らない累計だけを見せる */
+const timesMoved = p => p.logs.length;
 
-/* ========== 画面ルーティング ========== */
-let view = 'home';
-let quiz = null;
+/* ========== ルーティング ========== */
+let view = 'home', quizMood = 'normal', showAll = false, aiSel = 'first';
 
-function go(v) { view = v; window.scrollTo(0, 0); render(); }
+function go(v) { view = v; showAll = false; window.scrollTo(0, 0); render(); }
 
 function render() {
+  applyTheme();
   const p = P();
-  $('#nav').innerHTML = navHtml(p);
-  const body = $('#view');
-  const map = { home: vHome, quiz: vQuiz, result: vResult, roadmap: vRoadmap, log: vLog, ai: vAi, people: vPeople, settings: vSettings };
-  body.innerHTML = (map[view] || vHome)(p);
-  bind(p);
-  save();
+  const map = { home: vHome, quiz: vQuiz, clues: vClues, book: vBook, buddy: vBuddy, settings: vSettings, people: vPeople };
+  $('#view').innerHTML = (map[view] || vHome)(p);
+  $('#nav').innerHTML = navHtml();
+  $('#topbar').innerHTML = topHtml(p);
+  bind(p); save();
 }
 
-function navHtml(p) {
-  const items = [['home', '🏠', 'ホーム'], ['result', '🧭', '強み'], ['roadmap', '🗺️', '90日'], ['log', '✅', '記録'], ['ai', '🤖', 'AIコーチ']];
-  if (S.mode === 'coach') items.push(['people', '👥', '相手']);
-  items.push(['settings', '⚙️', '設定']);
+function topHtml(p) {
+  return `<button class="brand" data-nav="home">
+      <span class="bmark">${catSVG(30)}</span>
+      <span class="btxt">探偵手帳<em>${S.mode === 'coach' ? esc(p.name) : 'ローファイ探偵と'}</em></span>
+    </button>
+    <button class="icobtn" data-nav="settings" aria-label="設定">⚙</button>`;
+}
+function navHtml() {
+  const items = [['home', '🏠', 'ホーム'], ['clues', '🔎', 'てがかり'], ['book', '📓', '手帳'], ['buddy', '☕', '相棒']];
+  if (S.mode === 'coach') items.push(['people', '👥', 'みんな']);
   return items.map(([v, i, l]) =>
     `<button class="nav-btn${view === v ? ' on' : ''}" data-nav="${v}"><span>${i}</span>${l}</button>`).join('');
 }
 
+/* 燈月悠のふきだし */
+function say(text, mood, size) {
+  return `<div class="says">${akariTag(mood || 'normal', size || 62)}
+    <div class="bubble">${esc(text)}</div></div>`;
+}
+
 /* ========== ホーム ========== */
 function vHome(p) {
-  const d = p.diagnosis;
-  const isSelf = p.id === S.selfId;
-  const who = S.mode === 'coach' ? `<div class="who">対象：<b>${esc(p.name)}</b>${isSelf ? '（自分）' : ''}</div>` : '';
+  if (!p.result) return vWelcome(p);
+  const ns = nextStep(p), ch = ns ? CHAPTERS[ns.ci] : null;
+  const t = TYPES[p.result.type];
+  const style = STYLES[rank(p.result.styles)[0][0]];
+  const didToday = p.logs.some(l => l.date === today());
 
-  if (!d) return `
-    ${who}
-    <div class="hero">
-      <div class="hero-badge">STEP 1</div>
-      <h1>「知ってるのに動けない」を、<br>ここで終わりにします。</h1>
-      <p>ノウハウが足りないのではありません。<b>自分に合った動き方</b>が決まっていないだけです。
-      34問の診断で、あなたの<b>12資質</b>・<b>行動を止めているブレーキ</b>・<b>向いている副業の型</b>を出します。所要3〜4分。</p>
-      <button class="btn big" data-go="quiz">診断をはじめる</button>
-      <div class="note">結果はこの端末の中だけに保存されます。サーバーには一切送信されません。</div>
+  return `${say(didToday ? '今日はもう動きましたね。ゆっくりしてください。' : pick(AKARI.greetBack), didToday ? 'happy' : 'normal')}
+    ${ns ? `<div class="big-card">
+        <div class="mini">${esc(ch.no)}・${esc(ch.title)}　${doneCount(p) + 1}/${totalCount(p)}</div>
+        <h2 class="stepline">${esc(ns.text)}</h2>
+        <button class="btn xl" data-fin="${ns.id}">やった！</button>
+        <button class="btn link" data-tiny="1">気が乗らない日は、こっち</button>
+      </div>`
+      : `<div class="big-card"><h2 class="stepline">${esc(AKARI.noStep)}</h2>
+        <button class="btn xl" data-again="1">つぎの9手をつくる</button></div>`}
+
+    <div class="grid2">
+      <button class="tile" data-nav="clues"><em>${t.emoji}</em><b>${esc(t.name)}</b><span>あなたに向いてる道</span></button>
+      <button class="tile" data-nav="book"><em>📓</em><b>${timesMoved(p)}回</b><span>これまで動いた回数</span></button>
     </div>
-    <div class="cards">
-      ${[['🧭', '強みを知る', '12資質から上位5つを特定。「強みの裏側にある落とし穴」までセットで出します。'],
-         ['🧊', 'ブレーキを外す', '動けない原因を5タイプで特定し、今日15分でできる処方箋を出します。'],
-         ['🗺️', '90日で動かす', '型に合わせた90日ロードマップを自動生成。初収益までの道筋を引きます。']]
-        .map(([i, t, x]) => `<div class="card"><div class="ci">${i}</div><h3>${t}</h3><p>${x}</p></div>`).join('')}
-    </div>`;
-
-  const t = TYPES[d.type];
-  const nt = nextTask(p);
-  const topBrake = rank(d.brakes)[0];
-  const st = streak(p);
-  return `
-    ${who}
-    <div class="panel accent">
-      <div class="label">あなたの型</div>
-      <h2>${esc(t.name)}</h2>
-      <p class="catch">${esc(t.catch)}</p>
-      <div class="stats">
-        <div><b>${progress(p)}%</b><span>90日進捗</span></div>
-        <div><b>${st}日</b><span>連続実行</span></div>
-        <div><b>${p.logs.length}</b><span>記録数</span></div>
-      </div>
-    </div>
-
-    <div class="panel">
-      <div class="label">今週の一歩（これだけでOK）</div>
-      ${nt ? `<h3 class="step-text">${esc(nt.text)}</h3>
-        <div class="row">
-          <button class="btn" data-done="${nt.id}">できた！</button>
-          <button class="btn ghost" data-go="ai" data-preset="stuck">動けない…</button>
-        </div>` : `<p>ロードマップのタスクは全部完了しています。素晴らしい！次の90日を作りましょう。</p>
-        <button class="btn" data-newcycle="1">次の90日を作る</button>`}
-    </div>
-
-    <div class="panel warn">
-      <div class="label">いま一番強いブレーキ</div>
-      <h3>${esc(BRAKES[topBrake[0]].name)} <span class="pct">${topBrake[1]}%</span></h3>
-      <p>${esc(BRAKES[topBrake[0]].catch)}</p>
-      <div class="rx"><b>今日15分の処方箋</b><br>${esc(BRAKES[topBrake[0]].step)}</div>
-    </div>
-
-    <div class="row">
-      <button class="btn ghost" data-go="result">診断結果を見る</button>
-      <button class="btn ghost" data-go="roadmap">90日ロードマップ</button>
+    <div class="soft">
+      <div class="mini">${style.emoji} ${esc(style.name)}のあなたへ</div>
+      <p>${esc(style.line)}</p>
     </div>`;
 }
 
-/* ========== 診断 ========== */
-const QALL = () => [...Q_TRAIT.map((q, i) => ({ key: 't' + i, text: q[1] })),
-                    ...Q_BRAKE.map((q, i) => ({ key: 'b' + i, text: q[1] }))];
+function vWelcome() {
+  return `<div class="welcome">
+      ${akariTag('normal', 128)}
+      <div class="hi">${esc(AKARI.greetFirst)}</div>
+      <h1>調べるのが好きなあなたへ。<br><b>それ、探偵の才能です。</b></h1>
+      <p>本もセミナーも、集めてきたものは全部むだになりません。
+      あとは<b>どこから手をつけるか</b>だけ。34問、ぜんぶで3分です。</p>
+      <button class="btn xl" data-nav="quiz">調べてもらう</button>
+      <ul class="easy">
+        <li>1問3秒。指1本でOK</li>
+        <li>途中でやめても、続きから始められます</li>
+        <li>結果はこの端末の中だけ。登録もいりません</li>
+      </ul>
+    </div>`;
+}
+
+/* ========== 調査（クイズ） ========== */
+const QALL = () => [...Q_TRAIT.map((q, i) => ({ k: 't' + i, t: q[1] })),
+                    ...Q_STYLE.map((q, i) => ({ k: 's' + i, t: q[1] }))];
 
 function vQuiz(p) {
-  if (!quiz) quiz = { i: 0, a: {} };
-  const qs = QALL();
-  const q = qs[quiz.i];
-  const pctDone = Math.round(quiz.i / qs.length * 100);
-  if (quiz.i >= qs.length) {
-    p.diagnosis = score(quiz.a);
-    p.roadmap = buildRoadmap(p.diagnosis.type);
-    quiz = null; save();
-    setTimeout(() => go('result'), 0);
-    return '<div class="panel">診断中…</div>';
+  if (!p.quiz) p.quiz = { i: 0, a: {} };
+  const qs = QALL(), q = qs[p.quiz.i];
+  if (p.quiz.i >= qs.length) {
+    p.result = scoreAll(p.quiz.a);
+    p.steps = buildSteps(p.result.type);
+    p.quiz = null; save();
+    setTimeout(() => go('clues'), 420);
+    return `<div class="welcome">${akariTag('happy', 128)}<div class="hi">${esc(AKARI.quizEnd)}</div></div>`;
   }
-  return `
-    <div class="quiz">
-      <div class="bar"><i style="width:${pctDone}%"></i></div>
-      <div class="qnum">${quiz.i + 1} / ${qs.length}</div>
-      <h2 class="qtext">${esc(q.text)}</h2>
-      <div class="scale">
-        ${SCALE.map(s => `<button class="sc" data-ans="${s.v}"><b>${s.v}</b>${esc(s.label)}</button>`).join('')}
+  const left = qs.length - p.quiz.i;
+  return `<div class="quiz">
+      <div class="qtop">
+        <div class="bar"><i style="width:${p.quiz.i / qs.length * 100}%"></i></div>
+        <span class="mini">あと${left}問</span>
       </div>
-      ${quiz.i > 0 ? '<button class="btn ghost sm" data-back="1">← 1つ戻る</button>' : ''}
+      ${p.quiz.i === 0 ? say(AKARI.quizStart, 'normal', 48)
+        : (p.quiz.i % 8 === 0 ? say(pick(AKARI.quizMid), 'think', 48) : '')}
+      <h2 class="qtext">${esc(q.t)}</h2>
+      <div class="scale">
+        ${SCALE.map(s => `<button class="sc" data-ans="${s.v}"><i>${s.emoji}</i>${esc(s.label)}</button>`).join('')}
+      </div>
+      <div class="qfoot">
+        ${p.quiz.i > 0 ? '<button class="btn link" data-back="1">← ひとつ戻る</button>' : '<span></span>'}
+        <button class="btn link" data-pause="1">今日はここまで</button>
+      </div>
     </div>`;
 }
 
-/* ========== 結果 ========== */
-function vResult(p) {
-  const d = p.diagnosis;
-  if (!d) return `<div class="panel"><p>まだ診断していません。</p><button class="btn" data-go="quiz">診断する</button></div>`;
-  const t = TYPES[d.type];
-  const top5 = rank(d.traits).slice(0, 5);
-  const bottom = rank(d.traits).slice(-2);
-  const brakes = rank(d.brakes).slice(0, 2);
-
-  return `
-    <div class="panel accent">
-      <div class="label">向いている副業の型</div>
-      <h2>${esc(t.name)}</h2>
+/* ========== てがかり（結果） ========== */
+function vClues(p) {
+  if (!p.result) return notyet();
+  const r = p.result, t = TYPES[r.type];
+  const top = rank(r.traits).slice(0, 5);
+  const style = STYLES[rank(r.styles)[0][0]];
+  return `${say(AKARI.resultTop, 'happy')}
+    <div class="big-card way">
+      <div class="mini">向いてる道</div>
+      <h2><span class="wemoji">${t.emoji}</span>${esc(t.name)}<em>${esc(t.sub)}</em></h2>
       <p class="catch">${esc(t.catch)}</p>
       <p>${esc(t.desc)}</p>
-      <div class="chips">${t.examples.map(e => `<span class="chip">${esc(e)}</span>`).join('')}</div>
-      <div class="rx"><b>最初の1円の取り方</b><br>${esc(t.money)}</div>
-      <div class="rx warn-rx"><b>この型がつまずくポイント</b><br>${esc(t.risk)}</div>
+      <div class="chips">${t.examples.map(x => `<span class="chip">${esc(x)}</span>`).join('')}</div>
+      <div class="rx"><b>はじめの1円</b>${esc(t.money)}</div>
     </div>
 
-    <div class="panel">
-      <div class="label">あなたの強み TOP5</div>
-      ${top5.map(([c, v], i) => {
-        const tr = TRAITS[c], cat = CATS[tr.cat];
-        return `<div class="trait" style="--c:${cat.color}">
-          <div class="trait-h"><span class="rk">${i + 1}</span>
-            <div><b>${esc(tr.name)}</b><span class="cat">${esc(cat.name)}</span>
-            <div class="tc">${esc(tr.catch)}</div></div>
-            <span class="pct">${v}%</span></div>
-          <div class="trait-b">
-            <p><b>効くところ：</b>${esc(tr.strong)}</p>
-            <p class="dim"><b>空回りするとき：</b>${esc(tr.trap)}</p>
-            <p class="lev"><b>活かし方：</b>${esc(tr.lever)}</p>
-          </div></div>`;
-      }).join('')}
+    <h3 class="sec">あなたの持ち味 5つ</h3>
+    ${top.map(([c, v], i) => {
+      const tr = TRAITS[c];
+      return `<details class="trait"${i === 0 ? ' open' : ''}>
+        <summary><span class="rk">${i + 1}</span>
+          <span class="tname">${esc(tr.name)}<em>${esc(tr.catch)}</em></span>
+          <span class="meter"><i style="width:${v}%"></i></span></summary>
+        <div class="tbody">
+          <p>${esc(tr.strong)}</p>
+          <p class="scene">効くところ：${esc(tr.scene)}</p>
+          <p class="lev">💡 ${esc(tr.easy)}</p>
+        </div></details>`;
+    }).join('')}
+
+    <h3 class="sec">あなたの進みグセ</h3>
+    <div class="big-card style">
+      <h2><span class="wemoji">${style.emoji}</span>${esc(style.name)}<em>${esc(style.catch)}</em></h2>
+      <p>${esc(style.good)}</p>
+      <div class="rx"><b>ラクに進むコツ</b>${esc(style.tip)}</div>
     </div>
 
-    <div class="panel warn">
-      <div class="label">行動を止めているブレーキ</div>
-      ${brakes.map(([c, v]) => {
-        const b = BRAKES[c];
-        return `<div class="brake">
-          <h3>${esc(b.name)} <span class="pct">${v}%</span></h3>
-          <p class="catch">${esc(b.catch)}</p>
-          <p><b>出ているサイン：</b>${esc(b.sign)}</p>
-          <p class="dim"><b>なぜ起きるか：</b>${esc(b.why)}</p>
-          <p><b>外し方：</b>${esc(b.remedy)}</p>
-          <div class="rx"><b>今日15分でやること</b><br>${esc(b.step)}</div>
-        </div>`;
-      }).join('')}
-    </div>
-
-    <div class="panel">
-      <div class="label">伸ばさなくていいところ</div>
-      <p>この2つは、あなたが無理に伸ばす必要はありません。人に頼るか、仕組みで補うのが正解です。</p>
-      <div class="chips">${bottom.map(([c, v]) => `<span class="chip dimchip">${esc(TRAITS[c].name)} ${v}%</span>`).join('')}</div>
-    </div>
-
-    <div class="row">
-      <button class="btn" data-go="roadmap">90日ロードマップへ</button>
-      <button class="btn ghost" data-go="ai">AIコーチに相談する</button>
-    </div>
-    <button class="btn ghost sm" data-retake="1">診断をやり直す</button>`;
+    <button class="btn xl" data-nav="book">手帳をひらく</button>
+    <button class="btn link wide" data-retake="1">もう一度、調べてもらう</button>`;
 }
+const notyet = () => `<div class="welcome">${akariTag('think', 110)}
+    <div class="hi">まだ、調べていませんね。</div>
+    <button class="btn xl" data-nav="quiz">3分で調べてもらう</button></div>`;
 
-/* ========== ロードマップ ========== */
-function vRoadmap(p) {
-  if (!p.roadmap) return `<div class="panel"><p>先に診断してください。</p><button class="btn" data-go="quiz">診断する</button></div>`;
-  return `
-    <div class="panel">
-      <div class="label">90日ロードマップ</div>
-      <h2>${progress(p)}% 完了</h2>
-      <div class="bar"><i style="width:${progress(p)}%"></i></div>
-      <p class="dim">上から順に1つずつでOK。同時に2つ進めないのがコツです。</p>
+/* ========== 手帳 ========== */
+function vBook(p) {
+  if (!p.result) return notyet();
+  const ns = nextStep(p), ch = ns ? CHAPTERS[ns.ci] : null;
+  return `<div class="big-card">
+      <div class="mini">${ns ? esc(ch.no) + '・' + esc(ch.title) : 'ぜんぶ終わりました'}　${doneCount(p)}/${totalCount(p)}</div>
+      ${ns ? `<h2 class="stepline">${esc(ns.text)}</h2>
+        <button class="btn xl" data-fin="${ns.id}">やった！</button>
+        <button class="btn link" data-tiny="1">気が乗らない日は、こっち</button>`
+        : `<h2 class="stepline">${esc(AKARI.noStep)}</h2>
+           <button class="btn xl" data-again="1">つぎの9手をつくる</button>`}
     </div>
-    ${PHASES.map((ph, i) => {
-      const tasks = p.roadmap[i].tasks;
-      const dn = tasks.filter(t => t.done).length;
-      return `<div class="panel phase">
-        <div class="ph-h"><span class="ph-n">${ph.range}</span><h3>${esc(ph.title)}</h3><span class="pct">${dn}/${tasks.length}</span></div>
-        <p class="dim">ゴール：${esc(ph.goal)}</p>
-        <ul class="tasks">
-          ${tasks.map(t => `<li class="${t.done ? 'done' : ''}">
-            <label><input type="checkbox" data-task="${t.id}" ${t.done ? 'checked' : ''}><span>${esc(t.text)}</span></label>
-            ${t.doneAt ? `<em>${fmtDate(t.doneAt)}</em>` : ''}
-          </li>`).join('')}
-        </ul>
-        <button class="btn ghost sm" data-addtask="${i}">＋ 自分でタスクを足す</button>
+
+    <button class="btn link wide" data-all="1">${showAll ? '9手を閉じる' : 'ぜんぶの9手を見る'}</button>
+    ${showAll ? p.steps.map((c, i) => {
+      const ci = CHAPTERS[i];
+      return `<div class="soft">
+        <div class="mini">${esc(ci.no)}・${esc(ci.title)} — ${esc(ci.goal)}</div>
+        <ul class="steps">${c.items.map(x => `<li class="${x.done ? 'done' : ''}">
+          <label><input type="checkbox" data-step="${x.id}"${x.done ? ' checked' : ''}><span>${esc(x.text)}</span></label>
+          ${x.at ? `<em>${fmtDate(x.at)}</em>` : ''}</li>`).join('')}</ul>
       </div>`;
-    }).join('')}`;
-}
+    }).join('') : ''}
 
-/* ========== 記録 ========== */
-function vLog(p) {
-  const has = p.logs.some(l => l.date === today());
-  const recent = p.logs.slice().reverse().slice(0, 30);
-  const nt = nextTask(p);
-  return `
-    <div class="panel">
-      <div class="label">今日のチェックイン</div>
-      ${nt ? `<p class="step-text">${esc(nt.text)}</p>` : ''}
-      ${has ? '<p class="ok">✅ 今日はもう記録済みです。おつかれさまでした！</p>' : `
-      <div class="moods">${[1, 2, 3, 4, 5].map(m => `<button class="mood" data-mood="${m}">${['😵', '😟', '😐', '🙂', '🔥'][m - 1]}</button>`).join('')}</div>
-      <textarea id="lognote" rows="3" placeholder="やったこと / 詰まったこと（1行でOK）"></textarea>
-      <div class="row">
-        <button class="btn" data-log="1">できた として記録</button>
-        <button class="btn ghost" data-log="0">できなかった を記録</button>
-      </div>
-      <p class="note">「できなかった」も立派な記録です。原因が見えると次が変わります。</p>`}
-    </div>
-    <div class="panel">
-      <div class="label">これまでの記録（${p.logs.length}件・連続${streak(p)}日）</div>
-      ${recent.length ? `<ul class="loglist">${recent.map(l => `
-        <li class="${l.done ? '' : 'ng'}">
-          <span class="ld">${fmtDate(l.date)}</span>
-          <span class="lm">${['😵', '😟', '😐', '🙂', '🔥'][(l.mood || 3) - 1]}</span>
-          <span class="lt">${esc(l.note) || (l.done ? '実行した' : '動けなかった')}</span>
-        </li>`).join('')}</ul>` : '<p class="dim">まだ記録がありません。</p>'}
+    <h3 class="sec">これまで ${timesMoved(p)}回</h3>
+    <div class="soft">
+      ${p.logs.length ? `<ul class="loglist">${p.logs.slice().reverse().slice(0, 40).map(l =>
+        `<li><span class="ld">${fmtDate(l.date)}</span><span class="lt">${esc(l.text)}</span></li>`).join('')}</ul>`
+        : '<p class="dim">まだ真っ白です。1つ動いたら、ここに増えていきます。</p>'}
     </div>`;
 }
 
-/* ========== AIコーチ ========== */
-let aiSel = 'first';
-function vAi(p) {
-  if (!p.diagnosis) return `<div class="panel"><p>先に診断してください。</p><button class="btn" data-go="quiz">診断する</button></div>`;
+/* ========== 相棒（AI） ========== */
+function vBuddy(p) {
+  if (!p.result) return notyet();
   const list = PROMPTS.filter(x => S.mode === 'coach' || x.id !== 'coach');
-  return `
-    <div class="panel">
-      <div class="label">AIコーチ</div>
-      <p>下から場面を選ぶと、あなたの診断結果・進捗・記録を全部埋め込んだ<b>プロンプト</b>を作ります。
-      コピーして Claude や ChatGPT に貼るだけで、あなた専用のコーチングが始まります。</p>
+  return `${say('話してみましょうか。私の見立ても、そのまま渡しますね。', 'normal')}
+    <div class="soft">
+      <p class="dim">選ぶと、あなたの調査結果と進み具合を全部入れた文章ができます。
+      コピーして ChatGPT や Claude に貼るだけです。</p>
       <div class="prompts">
         ${list.map(x => `<button class="pbtn${aiSel === x.id ? ' on' : ''}" data-ai="${x.id}">
-          <span class="pi">${x.icon}</span><b>${esc(x.name)}</b><em>${esc(x.desc)}</em></button>`).join('')}
+          <em>${x.emoji}</em><b>${esc(x.name)}</b><span>${esc(x.desc)}</span></button>`).join('')}
       </div>
     </div>
-    <div class="panel">
-      <div class="label">生成されたプロンプト</div>
-      <textarea id="ptext" rows="16" readonly>${esc(makePrompt(p, aiSel))}</textarea>
+    <div class="soft">
+      <textarea id="ptext" rows="12" readonly>${esc(makePrompt(p, aiSel))}</textarea>
+      <button class="btn xl" data-copy="1">📋 コピーする</button>
       <div class="row">
-        <button class="btn" data-copy="1">📋 コピーする</button>
         <button class="btn ghost" data-open="claude">Claudeを開く</button>
         <button class="btn ghost" data-open="gpt">ChatGPTを開く</button>
       </div>
@@ -356,231 +301,222 @@ function vAi(p) {
 }
 
 function ctx(p) {
-  const d = p.diagnosis, t = TYPES[d.type];
-  const top5 = rank(d.traits).slice(0, 5).map(([c, v]) => `${TRAITS[c].name}(${v}%)`).join('、');
-  const brakes = rank(d.brakes).slice(0, 2).map(([c, v]) => `${BRAKES[c].name}(${v}%)`).join('、');
-  const nt = nextTask(p);
-  const recent = p.logs.slice(-7).map(l => `- ${l.date} ${l.done ? '実行' : '未実行'} 気分${l.mood || 3}/5 ${l.note || ''}`).join('\n') || '- 記録なし';
-  const doneList = allTasks(p).filter(x => x.done).map(x => '- ' + x.text).join('\n') || '- まだなし';
-  return `【対象者の情報】
+  const r = p.result, t = TYPES[r.type];
+  const top = rank(r.traits).slice(0, 5).map(([c, v]) => `${TRAITS[c].name}(${v}%)`).join('、');
+  const st = STYLES[rank(r.styles)[0][0]];
+  const ns = nextStep(p);
+  const recent = p.logs.slice(-6).map(l => `- ${l.date} ${l.text}`).join('\n') || '- まだなし';
+  return `【この人のこと】
 ・呼び名：${p.name}
-・向いている型：${t.name}（${t.catch}）
-・強み上位5：${top5}
-・行動を止めているブレーキ：${brakes}
-・90日進捗：${progress(p)}%（連続実行 ${streak(p)}日 / 記録 ${p.logs.length}件）
-・目的（なぜ副業を）：${p.goal.why || '未記入'}
-・目標：${p.goal.target || '未記入'}
+・向いてる道：${t.name}（${t.sub}）＝ ${t.catch}
+・持ち味 上位5：${top}
+・進みグセ：${st.name}（${st.catch}）→ ${st.tip}
+・進み具合：9手中 ${doneCount(p)}手／これまで${timesMoved(p)}回動いた
+・やる理由：${p.goal.why || '未記入'}
+・ごほうび：${p.goal.reward || '未記入'}
 ・使える時間：${p.goal.hours || '未記入'}
 
-【完了済みタスク】
-${doneList}
+【いま目の前にある一手】
+${ns ? ns.text : '（9手ぜんぶ完了）'}
 
-【今取り組むべきタスク】
-${nt ? nt.text : '（ロードマップ完了）'}
-
-【直近の記録】
+【最近の動き】
 ${recent}`;
 }
 
 function makePrompt(p, id) {
-  const base = ctx(p);
-  const d = p.diagnosis;
   const rule = `【あなたの役割】
-あなたは「副業をやりたいのに動けない人」専門の伴走コーチです。以下を必ず守ってください。
-1. 新しいノウハウを増やさない。相手はすでに知識過多です。情報提供より、決断と実行の支援をしてください。
-2. 一度に出す宿題は1つだけ。しかも15分で終わるサイズまで分解すること。
-3. まず質問し、相手に答えさせてから提案する。いきなり結論を並べない。
-4. 相手の強みを使った方法で提案する。弱点の克服を求めない。
-5. 相手を励ますが、甘やかさない。期限と、実行したか確認する方法を必ずセットにする。`;
+あなたは、副業をはじめたい人の相棒です。次のことを必ず守ってください。
 
-  if (id === 'first') return `${rule}
+1. 相手を絶対に否定しない。「できていない」「動けていない」「原因」といった言葉は使わない。
+2. 新しいノウハウを増やさない。この人はもう十分に知っています。必要なのは、どれをやるか決めることだけです。
+3. 一度に出す提案は1つだけ。しかも15分で終わるサイズまで小さくする。
+4. まず質問して、相手に話させてから提案する。いきなり答えを並べない。
+5. 持ち味を使うやり方で提案する。苦手なことを克服させようとしない。
+6. 相手が「気が乗らない」と言ったら、責めずに、3分でできるサイズまで小さくして出し直す。
+7. 落ち着いた、静かなトーンで話す。テンションを上げて煽らない。`;
+  const base = `${rule}\n\n${ctx(p)}`;
 
-${base}
+  if (id === 'first') return `${base}
 
-【今回やってほしいこと】
-初回セッションです。次の流れで進めてください。1ステップずつ、私の返答を待ってから次に進んでください。
-① 上の情報を読んで、私が「動けていない本当の理由」の仮説を1〜2個立て、質問の形で確認する
-② 私の答えを聞いて、90日後のゴールを一文に整える
-③ その型と強みに合った「今週の1つだけの行動」を、15分サイズまで分解して提案する
-④ 実行できたか確認する方法（いつ・どこに報告するか）を一緒に決める`;
+【今回してほしいこと】
+はじめての相談です。1つずつ、私の返事を待ってから進めてください。
+① 上の情報を読んで、私の持ち味がいちばん活きそうな形を1つ挙げて、それでいいか質問で確かめる
+② 私の答えを聞いて、3ヶ月後にこうなっていたい姿を一文にまとめる
+③ 今週やる一手を1つだけ、15分で終わるサイズにして提案する
+④ それをやったと報告する場所を一緒に決める`;
 
-  if (id === 'weekly') return `${rule}
+  if (id === 'weekly') return `${base}
 
-${base}
-
-【今回やってほしいこと】
-1週間のふりかえりです。次の流れで、1つずつ質問しながら進めてください。
-① 直近の記録を見て、できたこと・進んだことを具体的に1つ以上言語化して認める
-② できなかった部分について、意志の問題ではなく「仕組みのどこが原因か」を一緒に特定する
-③ 来週の1つだけの行動を決める。先週うまくいかなかったなら、サイズを半分にして提案する
-④ 最後に、来週の私に向けた短いメッセージを書く`;
+【今回してほしいこと】
+一週間のふりかえりです。
+① 最近の動きを見て、進んだところを具体的に1つ以上見つけて言葉にする
+② できなかったことは責めず、「サイズが大きすぎただけ」という前提で一緒に見直す
+③ 来週の一手を1つ決める。先週やれなかったなら、半分の大きさにして出す
+④ 最後に、来週の私に向けた短い一言を書く`;
 
   if (id === 'stuck') {
-    const b = rank(d.brakes)[0][0];
-    return `${rule}
+    const st = STYLES[rank(p.result.styles)[0][0]];
+    return `${base}
 
-${base}
+【今の気分】
+なんとなく気が乗りません。ちなみに私は「${st.name}（${st.catch}）」タイプだそうです。
 
-【今の状態】
-手が止まっています。診断上いちばん強いブレーキは「${BRAKES[b].name}」（${BRAKES[b].catch}）です。
-
-【今回やってほしいこと】
-① まず「なぜ動けないのか」を私に説明させる質問を1つだけ投げてください
-② 私の答えから、止まっている本当のポイント（判断・不安・環境・サイズのどれか）を特定してください
-③ 今日これから15分でできる、恥ずかしいほど小さい一歩を1つだけ提案してください
-   ※準備・情報収集・計画は禁止です。必ず「外に出る」「形にする」行動にしてください
-④ それをやり終えたら何と報告すればいいか、報告文のテンプレを書いてください`;
+【今回してほしいこと】
+① 気が乗らないのは自然なことだと、まず一言だけ添えてください（長い励ましはいりません）
+② 目の前の一手を、3分で終わるサイズまで小さくしてください
+   ※調べる・考える・計画するのは無しで。「書く」「送る」「押す」など、手が動くものにしてください
+③ それすら重い日のために、30秒でできる代わりの動きも1つ用意してください
+④ どちらかをやったら、なんと報告すればいいか一文で書いてください`;
   }
 
-  if (id === 'money') return `${rule}
+  if (id === 'money') return `${base}
 
-${base}
+【今回してほしいこと】
+はじめてお金を受け取るための準備です。
+① 私の持ち味から、いちばん早く形になりそうな小さな商品を1つ提案する
+② 値段は相場ではなく「私が気まずくない額」から決めたいので、質問しながら一緒に決める
+③ 最初に声をかける相手を、私の身近な人から一緒に探す
+④ その人に送る文面を、売り込みっぽくならない形で下書きする
+⑤ いつ送るか、日付だけ決めさせる`;
 
-【今回やってほしいこと】
-最初の1円を受け取るための設計をします。
-① 私の型と強みから、いちばん早く売れる最小の商品（サービス）を1つ提案してください
-② 値段を決めます。相場ではなく「私が受け取れると感じる額」から始める前提で、質問しながら決めてください
-③ 最初の1人は誰に声をかけるべきか、私の身近な人から一緒に洗い出してください
-④ その人に送るメッセージの文面を、売り込みに見えない形で下書きしてください
-⑤ いつ送るか、日付を決めさせてください`;
+  if (id === 'coach') return `あなたはコーチの補佐役です。次の相手との面談準備を手伝ってください。
 
-  if (id === 'coach') return `あなたはプロのコーチを補佐するアシスタントです。以下のクライアントとの面談準備を手伝ってください。
+${ctx(p)}
 
-${base}
-
-【セッション履歴】
-${p.sessions.length ? p.sessions.map(s => `- ${s.date}：${s.note}${s.next ? '（次回宿題：' + s.next + '）' : ''}`).join('\n') : '- 初回面談'}
+【これまでの面談】
+${p.sessions.length ? p.sessions.map(s => `- ${s.date}：${s.note}${s.next ? '（次回：' + s.next + '）' : ''}`).join('\n') : '- 今回が初回'}
 
 【作ってほしいもの】
-① このクライアントの現状の見立て（強み・ブレーキ・停滞ポイント）を3行で
+① この人の見立てを3行で（持ち味・進みグセ・いま立っている場所）
 ② 今回の面談のゴール案を2つ
-③ 60分の面談の流れ（時間配分つき）
-④ 冒頭で使う質問を3つ、深掘り用の質問を5つ。強みを引き出す方向で
-⑤ 面談の最後に渡す宿題の候補を2つ（どちらも15分で終わるサイズ）
-⑥ 触れるとき注意が必要な点（傷つけやすい話題があれば）`;
+③ 60分の流れ（時間配分つき）
+④ 最初に使う質問3つ／深掘りの質問5つ（すべて持ち味を引き出す方向で）
+⑤ 最後に渡す宿題の候補を2つ（どちらも15分以内）
+⑥ 話すときに気をつけたい点`;
 
   return base;
 }
 
-/* ========== 相手（コーチモード） ========== */
+/* ========== みんな（コーチ） ========== */
 function vPeople() {
   const list = Object.values(S.profiles);
-  return `
-    <div class="panel">
-      <div class="label">伴走している相手</div>
-      <p class="dim">選ぶと、その人のデータに切り替わります。すべてこの端末内に保存されます。</p>
+  const p = P();
+  return `<div class="soft">
+      <div class="mini">伴走している人</div>
       <div class="people">
-        ${list.map(p => `<div class="person${p.id === S.activeId ? ' on' : ''}" data-pick="${p.id}">
-          <div class="pav">${esc((p.name || '?').slice(0, 1))}</div>
-          <div class="pinfo"><b>${esc(p.name)}</b>
-            <span>${p.diagnosis ? TYPES[p.diagnosis.type].name + ' / 進捗' + progress(p) + '%' : '未診断'}${p.id === S.selfId ? '・自分' : ''}</span></div>
-          ${p.id === S.selfId ? '' : `<button class="del" data-del="${p.id}">削除</button>`}
+        ${list.map(x => `<div class="person${x.id === S.activeId ? ' on' : ''}" data-pick="${x.id}">
+          <span class="pav">${akariTag('normal', 38)}</span>
+          <span class="pinfo"><b>${esc(x.name)}</b>
+            <em>${x.result ? TYPES[x.result.type].name + '・' + doneCount(x) + '/' + totalCount(x) + '手' : 'まだ調べていません'}${x.id === S.selfId ? '・自分' : ''}</em></span>
+          ${x.id === S.selfId ? '' : `<button class="del" data-del="${x.id}">消す</button>`}
         </div>`).join('')}
       </div>
-      <div class="row">
-        <input id="newname" placeholder="新しい相手の名前">
-        <button class="btn" data-addp="1">追加</button>
-      </div>
+      <div class="row"><input id="newname" placeholder="名前"><button class="btn" data-addp="1">追加</button></div>
     </div>
-    ${P().diagnosis ? `<div class="panel">
-      <div class="label">${esc(P().name)} のセッション記録</div>
-      <ul class="loglist">
-        ${P().sessions.length ? P().sessions.slice().reverse().map(s => `<li>
-          <span class="ld">${fmtDate(s.date)}</span>
-          <span class="lt">${esc(s.note)}${s.next ? `<em class="nx">→ ${esc(s.next)}</em>` : ''}</span></li>`).join('')
-          : '<li class="dim">まだ記録がありません</li>'}
-      </ul>
-      <textarea id="snote" rows="3" placeholder="今回の面談メモ"></textarea>
-      <input id="snext" placeholder="次回までの宿題（15分サイズで）">
-      <button class="btn" data-addsession="1">セッションを記録</button>
+    ${p.result ? `<div class="soft">
+      <div class="mini">${esc(p.name)} の面談メモ</div>
+      <ul class="loglist">${p.sessions.length ? p.sessions.slice().reverse().map(s =>
+        `<li><span class="ld">${fmtDate(s.date)}</span><span class="lt">${esc(s.note)}${s.next ? `<em class="nx">→ ${esc(s.next)}</em>` : ''}</span></li>`).join('')
+        : '<li class="dim">まだありません</li>'}</ul>
+      <textarea id="snote" rows="3" placeholder="今回のメモ"></textarea>
+      <input id="snext" placeholder="次回までの一手">
+      <button class="btn" data-addses="1">記録する</button>
     </div>` : ''}`;
 }
 
 /* ========== 設定 ========== */
 function vSettings(p) {
-  return `
-    <div class="panel">
-      <div class="label">モード</div>
-      <div class="row">
-        <button class="btn${S.mode === 'self' ? '' : ' ghost'}" data-mode="self">セルフ伴走</button>
-        <button class="btn${S.mode === 'coach' ? '' : ' ghost'}" data-mode="coach">コーチ（複数人を伴走）</button>
-      </div>
-      <p class="note">コーチモードにすると「相手」タブが出て、複数人を切り替えられます。</p>
+  return `<h3 class="sec">いろ</h3>
+    <div class="themes">
+      ${Object.entries(THEMES).map(([k, t]) => `<button class="th${S.theme === k ? ' on' : ''}" data-theme="${k}">
+        <span class="sw" style="background:linear-gradient(135deg,${t.a},${t.b})"></span>
+        <b>${esc(t.name)}</b><em>${esc(t.hint)}</em></button>`).join('')}
     </div>
-    <div class="panel">
-      <div class="label">${esc(p.name)} の基本情報</div>
+    <div class="segs">
+      ${[['auto', '自動'], ['off', 'あかるい'], ['on', 'くらい']].map(([k, l]) =>
+        `<button class="seg${S.dark === k ? ' on' : ''}" data-dark="${k}">${l}</button>`).join('')}
+    </div>
+
+    <h3 class="sec">あなたのこと</h3>
+    <div class="soft">
       <label class="fl">呼び名<input id="gname" value="${esc(p.name)}"></label>
-      <label class="fl">なぜ副業をやるのか（その先の状態を具体的に）
-        <textarea id="gwhy" rows="2" placeholder="例：月5万円あれば、家族と年2回旅行に行ける">${esc(p.goal.why)}</textarea></label>
-      <label class="fl">90日後の目標<input id="gtarget" value="${esc(p.goal.target)}" placeholder="例：初収益1円を取る / 発信30本"></label>
-      <label class="fl">週に使える時間<input id="ghours" value="${esc(p.goal.hours)}" placeholder="例：平日30分＋土曜2時間"></label>
-      <button class="btn" data-savegoal="1">保存する</button>
+      <label class="fl">やる理由（あとで思い出せるように）
+        <textarea id="gwhy" rows="2" placeholder="例：月5万あれば、家族と旅行に行ける">${esc(p.goal.why)}</textarea></label>
+      <label class="fl">ごほうび<input id="greward" value="${esc(p.goal.reward)}" placeholder="例：ぜんぶ終わったら好きなヘッドホンを買う"></label>
+      <label class="fl">使えそうな時間<input id="ghours" value="${esc(p.goal.hours)}" placeholder="例：夜に30分くらい"></label>
+      <button class="btn" data-savegoal="1">しまう</button>
     </div>
-    <div class="panel">
-      <div class="label">データ</div>
+
+    <h3 class="sec">つかいかた</h3>
+    <div class="segs">
+      ${[['self', 'ひとりで'], ['coach', '人を伴走する']].map(([k, l]) =>
+        `<button class="seg${S.mode === k ? ' on' : ''}" data-mode="${k}">${l}</button>`).join('')}
+    </div>
+
+    <h3 class="sec">データ</h3>
+    <div class="soft">
       <div class="row">
-        <button class="btn ghost" data-export="1">バックアップを書き出す</button>
+        <button class="btn ghost" data-export="1">書き出す</button>
         <button class="btn ghost" data-import="1">読み込む</button>
       </div>
-      <p class="note">データはこの端末のブラウザ内だけに保存されます。機種変更やブラウザのデータ削除で消えるので、たまに書き出しておくと安心です。</p>
-      <button class="btn danger sm" data-reset="1">${esc(p.name)} のデータを初期化</button>
+      <p class="dim">この端末の中だけに保存されています。たまに書き出しておくと安心です。</p>
+      <button class="btn link danger" data-reset="1">${esc(p.name)}のデータを消す</button>
     </div>
-    <div class="panel">
-      <p class="note">※ 本ツールの12資質・5ブレーキ・8つの型は、副業行動に特化した独自分類です。
-      ストレングスファインダー®（CliftonStrengths®／Gallup社）とは無関係で、その診断結果や解説文は使用していません。</p>
-    </div>`;
+    <div class="soft quote">
+      ${catSVG(34)}<p>「${esc(AKARI.quote)}」<em>— 燈月悠</em></p>
+    </div>
+    <p class="fine">本ツールの持ち味・進みグセ・道の分類は、副業での動きやすさに絞った独自のものです。
+    ストレングスファインダー®／CliftonStrengths®（Gallup社の登録商標）とは無関係で、同社の資質名・解説文は使用していません。</p>`;
 }
 
 /* ========== イベント ========== */
 function bind(p) {
-  const on = (sel, ev, fn) => $$(sel).forEach(el => el.addEventListener(ev, fn));
+  const on = (s, e, f) => $$(s).forEach(el => el.addEventListener(e, f));
 
-  on('[data-go]', 'click', e => {
-    const v = e.currentTarget.dataset.go;
-    if (e.currentTarget.dataset.preset) aiSel = e.currentTarget.dataset.preset;
-    if (v === 'quiz') quiz = { i: 0, a: {} };
-    go(v);
-  });
+  on('[data-nav]', 'click', e => go(e.currentTarget.dataset.nav));
 
   on('[data-ans]', 'click', e => {
-    quiz.a[QALL()[quiz.i].key] = +e.currentTarget.dataset.ans;
-    quiz.i++; render();
+    p.quiz.a[QALL()[p.quiz.i].k] = +e.currentTarget.dataset.ans;
+    p.quiz.i++; save(); render();
   });
-  on('[data-back]', 'click', () => { quiz.i = Math.max(0, quiz.i - 1); render(); });
+  on('[data-back]', 'click', () => { p.quiz.i = Math.max(0, p.quiz.i - 1); render(); });
+  on('[data-pause]', 'click', () => { save(); go('home'); });
   on('[data-retake]', 'click', () => {
-    if (!confirm('診断をやり直しますか？ロードマップも作り直されます（記録は残ります）')) return;
-    quiz = { i: 0, a: {} }; go('quiz');
+    if (!confirm('もう一度調べますか？（手帳の記録はそのまま残ります）')) return;
+    p.quiz = { i: 0, a: {} }; go('quiz');
   });
 
-  on('[data-task]', 'change', e => {
-    const id = e.currentTarget.dataset.task;
-    p.roadmap.forEach(ph => ph.tasks.forEach(t => {
-      if (t.id === id) { t.done = e.currentTarget.checked; t.doneAt = t.done ? today() : null; }
+  on('[data-fin]', 'click', e => {
+    const id = e.currentTarget.dataset.fin;
+    let txt = '';
+    p.steps.forEach(c => c.items.forEach(x => {
+      if (x.id === id) { x.done = true; x.at = today(); txt = x.text; }
+    }));
+    p.logs.push({ date: today(), text: txt });
+    toast(pick(AKARI.doneStep), 'happy');
+    render();
+  });
+  on('[data-step]', 'change', e => {
+    const id = e.currentTarget.dataset.step, ck = e.currentTarget.checked;
+    p.steps.forEach(c => c.items.forEach(x => {
+      if (x.id === id) { x.done = ck; x.at = ck ? today() : null;
+        if (ck) p.logs.push({ date: today(), text: x.text }); }
     }));
     render();
   });
-  on('[data-done]', 'click', e => {
-    const id = e.currentTarget.dataset.done;
-    p.roadmap.forEach(ph => ph.tasks.forEach(t => { if (t.id === id) { t.done = true; t.doneAt = today(); } }));
-    if (!p.logs.some(l => l.date === today())) p.logs.push({ date: today(), done: true, mood: 4, note: '' });
-    render();
-  });
-  on('[data-addtask]', 'click', e => {
-    const txt = prompt('追加するタスク（15分で終わるサイズがおすすめです）');
-    if (!txt) return;
-    p.roadmap[+e.currentTarget.dataset.addtask].tasks.push({ id: uid(), text: txt, done: false, doneAt: null });
-    render();
-  });
-  on('[data-newcycle]', 'click', () => {
-    if (!confirm('次の90日ロードマップを作りますか？（今の達成記録はリセットされます）')) return;
-    p.roadmap = buildRoadmap(p.diagnosis.type); go('roadmap');
+  on('[data-all]', 'click', () => { showAll = !showAll; render(); });
+  on('[data-again]', 'click', () => {
+    if (!confirm('つぎの9手をつくりますか？')) return;
+    p.steps = buildSteps(p.result.type); go('book');
   });
 
-  let mood = 4;
-  on('[data-mood]', 'click', e => { mood = +e.currentTarget.dataset.mood; $$('.mood').forEach(m => m.classList.remove('on')); e.currentTarget.classList.add('on'); });
-  on('[data-log]', 'click', e => {
-    p.logs.push({ date: today(), done: e.currentTarget.dataset.log === '1', mood, note: ($('#lognote') || {}).value || '' });
-    render();
+  on('[data-tiny]', 'click', () => {
+    const st = STYLES[rank(p.result.styles)[0][0]];
+    openSheet(`${st.emoji} ${st.name}のあなたへ`, st.micro,
+      'これならできそう', () => {
+        p.logs.push({ date: today(), text: st.micro });
+        closeSheet(); toast('ちゃんと動きました。', 'happy'); render();
+      });
   });
 
   on('[data-ai]', 'click', e => { aiSel = e.currentTarget.dataset.ai; render(); });
@@ -589,81 +525,95 @@ function bind(p) {
     try { await navigator.clipboard.writeText(ta.value); }
     catch (_) { ta.removeAttribute('readonly'); ta.select(); document.execCommand('copy'); ta.setAttribute('readonly', ''); }
     e.currentTarget.textContent = '✅ コピーしました';
-    setTimeout(() => { e.currentTarget.textContent = '📋 コピーする'; }, 1600);
+    setTimeout(() => { e.currentTarget.textContent = '📋 コピーする'; }, 1500);
   });
-  on('[data-open]', 'click', e => {
-    window.open(e.currentTarget.dataset.open === 'claude' ? 'https://claude.ai/new' : 'https://chatgpt.com/', '_blank', 'noopener');
-  });
+  on('[data-open]', 'click', e =>
+    window.open(e.currentTarget.dataset.open === 'claude' ? 'https://claude.ai/new' : 'https://chatgpt.com/', '_blank', 'noopener'));
 
+  on('[data-theme]', 'click', e => { S.theme = e.currentTarget.dataset.theme; render(); });
+  on('[data-dark]', 'click', e => { S.dark = e.currentTarget.dataset.dark; render(); });
   on('[data-mode]', 'click', e => { S.mode = e.currentTarget.dataset.mode; render(); });
-  on('[data-pick]', 'click', e => {
-    if (e.target.dataset.del) return;
-    S.activeId = e.currentTarget.dataset.pick; go('home');
-  });
+
+  on('[data-pick]', 'click', e => { if (e.target.dataset.del) return; S.activeId = e.currentTarget.dataset.pick; go('home'); });
   on('[data-del]', 'click', e => {
-    e.stopPropagation();
-    const id = e.currentTarget.dataset.del;
-    if (!confirm(`${S.profiles[id].name} のデータを削除します。元に戻せません。よろしいですか？`)) return;
-    delete S.profiles[id];
-    if (S.activeId === id) S.activeId = S.selfId;
-    render();
+    e.stopPropagation(); const id = e.currentTarget.dataset.del;
+    if (!confirm(`${S.profiles[id].name} のデータを消します。よろしいですか？`)) return;
+    delete S.profiles[id]; if (S.activeId === id) S.activeId = S.selfId; render();
   });
   on('[data-addp]', 'click', () => {
-    const n = ($('#newname') || {}).value.trim();
-    if (!n) return alert('名前を入力してください');
+    const n = ($('#newname').value || '').trim(); if (!n) return;
     const np = blankProfile(n); S.profiles[np.id] = np; S.activeId = np.id; go('home');
   });
-  on('[data-addsession]', 'click', () => {
-    const note = ($('#snote') || {}).value.trim();
-    if (!note) return alert('面談メモを入力してください');
-    p.sessions.push({ date: today(), note, next: ($('#snext') || {}).value.trim() });
-    render();
+  on('[data-addses]', 'click', () => {
+    const note = ($('#snote').value || '').trim(); if (!note) return;
+    p.sessions.push({ date: today(), note, next: ($('#snext').value || '').trim() }); render();
   });
 
   on('[data-savegoal]', 'click', () => {
-    p.name = ($('#gname').value || '名前未設定').trim();
-    p.goal = { why: $('#gwhy').value, target: $('#gtarget').value, hours: $('#ghours').value, deadline: p.goal.deadline };
-    save(); alert('保存しました！');
-    render();
+    p.name = ($('#gname').value || 'あなた').trim();
+    p.goal = { why: $('#gwhy').value, reward: $('#greward').value, hours: $('#ghours').value };
+    save(); toast('しまいました。', 'happy'); render();
   });
 
   on('[data-export]', 'click', () => {
-    const blob = new Blob([JSON.stringify(S, null, 2)], { type: 'application/json' });
     const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = `伴走スタジオ_${today()}.json`;
-    a.click(); URL.revokeObjectURL(a.href);
+    a.href = URL.createObjectURL(new Blob([JSON.stringify(S, null, 2)], { type: 'application/json' }));
+    a.download = `探偵手帳_${today()}.json`; a.click(); URL.revokeObjectURL(a.href);
   });
   on('[data-import]', 'click', () => {
-    const inp = document.createElement('input');
-    inp.type = 'file'; inp.accept = 'application/json';
-    inp.onchange = () => {
-      const f = inp.files[0]; if (!f) return;
-      const r = new FileReader();
-      r.onload = () => {
-        try {
-          const d = JSON.parse(r.result);
-          if (!d.profiles) throw 0;
-          if (!confirm('現在のデータを上書きします。よろしいですか？')) return;
-          S = d; save(); go('home');
-        } catch (_) { alert('このファイルは読み込めませんでした。'); }
-      };
-      r.readAsText(f);
-    };
-    inp.click();
+    const i = document.createElement('input'); i.type = 'file'; i.accept = 'application/json';
+    i.onchange = () => { const f = i.files[0]; if (!f) return; const r = new FileReader();
+      r.onload = () => { try { const d = JSON.parse(r.result); if (!d.profiles) throw 0;
+        if (!confirm('いまのデータに上書きします。よろしいですか？')) return;
+        S = d; save(); go('home'); } catch (_) { alert('読み込めませんでした。'); } };
+      r.readAsText(f); };
+    i.click();
   });
   on('[data-reset]', 'click', () => {
-    if (!confirm(`${p.name} の診断・ロードマップ・記録をすべて消します。元に戻せません。よろしいですか？`)) return;
-    const fresh = blankProfile(p.name); fresh.id = p.id;
-    S.profiles[p.id] = fresh; go('home');
+    if (!confirm(`${p.name}の調査結果と記録をぜんぶ消します。よろしいですか？`)) return;
+    const f = blankProfile(p.name); f.id = p.id; S.profiles[p.id] = f; go('home');
   });
-
 }
 
-document.addEventListener('click', e => {
-  const b = e.target.closest('.nav-btn');
-  if (b) { view = b.dataset.nav; window.scrollTo(0, 0); render(); }
-});
+/* ========== トースト / シート ========== */
+function toast(text, mood) {
+  const el = document.createElement('div');
+  el.className = 'toast';
+  el.innerHTML = `${akariTag(mood || 'happy', 40)}<span>${esc(text)}</span>`;
+  document.body.appendChild(el);
+  requestAnimationFrame(() => el.classList.add('in'));
+  setTimeout(() => { el.classList.remove('in'); setTimeout(() => el.remove(), 300); }, 2200);
+}
+function openSheet(title, body, btn, fn) {
+  const el = document.createElement('div');
+  el.className = 'sheet-wrap'; el.id = 'sheet';
+  el.innerHTML = `<div class="sheet">
+    ${akariTag('normal', 66)}
+    <div class="mini">${esc(title)}</div>
+    <p class="sheet-body">${esc(body)}</p>
+    <button class="btn xl" id="sheet-ok">${esc(btn)}</button>
+    <button class="btn link" id="sheet-no">${esc(AKARI.skipDay)}</button>
+  </div>`;
+  document.body.appendChild(el);
+  requestAnimationFrame(() => el.classList.add('in'));
+  $('#sheet-ok').onclick = fn;
+  $('#sheet-no').onclick = closeSheet;
+  el.onclick = e => { if (e.target === el) closeSheet(); };
+}
+function closeSheet() { const s = $('#sheet'); if (s) { s.classList.remove('in'); setTimeout(() => s.remove(), 250); } }
 
+/* ========== 起動 ========== */
+akariImgProbe();
+document.addEventListener('akari-img', () => render());
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { if (S.dark === 'auto') applyTheme(); });
 render();
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(() => {});
+/* ローカル開発中はSWを登録しない（古いキャッシュが配信される事故を防ぐため） */
+const isLocal = ['localhost', '127.0.0.1', ''].includes(location.hostname);
+if ('serviceWorker' in navigator) {
+  if (isLocal) {
+    navigator.serviceWorker.getRegistrations().then(rs => rs.forEach(r => r.unregister()));
+    caches.keys().then(ks => ks.forEach(k => caches.delete(k)));
+  } else {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  }
+}
