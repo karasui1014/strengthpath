@@ -139,7 +139,7 @@ function vHome(p) {
         <button class="btn xl" data-fin="${ns.id}">やった！</button>
         <button class="btn link" data-tiny="1">気が乗らない日は、こっち</button>
       </div>`
-      : `<div class="big-card"><h2 class="stepline">${esc(AKARI.noStep)}</h2>
+      : `<div class="big-card">${akariTag('surprised', 84)}<h2 class="stepline">${esc(AKARI.noStep)}</h2>
         <button class="btn xl" data-again="1">つぎの9手をつくる</button></div>`}
 
     <div class="grid2">
@@ -493,7 +493,7 @@ function bind(p) {
       if (x.id === id) { x.done = true; x.at = today(); txt = x.text; }
     }));
     p.logs.push({ date: today(), text: txt });
-    toast(pick(AKARI.doneStep), 'happy');
+    toast(pick(AKARI.doneStep), pick(['happy', 'wink']));
     render();
   });
   on('[data-step]', 'change', e => {
@@ -515,7 +515,7 @@ function bind(p) {
     openSheet(`${st.emoji} ${st.name}のあなたへ`, st.micro,
       'これならできそう', () => {
         p.logs.push({ date: today(), text: st.micro });
-        closeSheet(); toast('ちゃんと動きました。', 'happy'); render();
+        closeSheet(); toast('ちゃんと動きました。', 'wink'); render();
       });
   });
 
@@ -588,7 +588,7 @@ function openSheet(title, body, btn, fn) {
   const el = document.createElement('div');
   el.className = 'sheet-wrap'; el.id = 'sheet';
   el.innerHTML = `<div class="sheet">
-    ${akariTag('normal', 66)}
+    ${akariTag('idea', 72)}
     <div class="mini">${esc(title)}</div>
     <p class="sheet-body">${esc(body)}</p>
     <button class="btn xl" id="sheet-ok">${esc(btn)}</button>
@@ -604,7 +604,6 @@ function closeSheet() { const s = $('#sheet'); if (s) { s.classList.remove('in')
 
 /* ========== 起動 ========== */
 akariImgProbe();
-document.addEventListener('akari-img', () => render());
 matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { if (S.dark === 'auto') applyTheme(); });
 render();
 /* ローカル開発中はSWを登録しない（古いキャッシュが配信される事故を防ぐため） */

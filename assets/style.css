@@ -29,6 +29,11 @@ body{background:var(--bg);color:var(--fg);line-height:1.8;
   transition:background .3s,color .3s}
 #app{max-width:600px;margin:0 auto;padding:0 18px 30px}
 img,svg{display:block;max-width:100%}
+/* キャラクター画像 */
+.akari{object-fit:contain}
+.akari-cat{object-fit:contain}
+.bmark .akari-cat{width:30px;height:30px}
+
 
 /* ヘッダー */
 #topbar{max-width:600px;margin:0 auto;padding:14px 18px 10px;

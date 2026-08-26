@@ -2,7 +2,10 @@
    ⚠️ ファイルを更新したら必ず CACHE のバージョンを上げること */
 const CACHE = 'tantei-techo-v1';
 const ASSETS = ['./','./index.html','./manifest.json',
-  './assets/style.css','./assets/data.js','./assets/akari.js','./assets/app.js'];
+  './assets/style.css','./assets/data.js','./assets/akari.js','./assets/app.js',
+  './assets/akari/normal.png','./assets/akari/think.png','./assets/akari/surprised.png',
+  './assets/akari/idea.png','./assets/akari/happy.png','./assets/akari/wink.png',
+  './assets/akari/cat.png'];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)).then(() => self.skipWaiting()));
 });
