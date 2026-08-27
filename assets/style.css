@@ -131,7 +131,7 @@ textarea{resize:vertical;line-height:1.75}
   transition:border-color .12s,transform .12s}
 .sc:hover{border-color:var(--acc)}
 .sc:active{transform:scale(.98)}
-.sc i{font-size:21px;font-style:normal;line-height:1}
+
 .qfoot{display:flex;justify-content:space-between;align-items:center;margin-top:14px}
 .qfoot .btn.link{width:auto}
 
@@ -315,3 +315,28 @@ textarea{resize:vertical;line-height:1.75}
 /* タブが5つになったので少し詰める */
 .nav-btn{font-size:10px}
 .nav-btn span{font-size:18px}
+
+/* ===== 日本語の改行を自然にする =====
+   既定だと「ひとこ／とで書く」のように語の途中で折れてしまうため、
+   ・line-break:strict … 句読点や閉じ括弧が行頭に来ないようにする（禁則処理）
+   ・word-break:auto-phrase … 文節の切れ目で折る（Chrome系のみ。他は既定動作に戻るだけ） */
+html{ line-break:strict; word-break:normal; overflow-wrap:normal }
+
+.qtext, .stepline, .bubble, .hi, .catch, .lead,
+h1, h2, h3, p, li, summary,
+.tname, .tname em, .jn b, .jn em, .tile b, .tile span,
+.sc, .btn, .tips li, .rx, .jrow, .pbtn span, .easy li, .fine, .note, .dim{
+  word-break:auto-phrase;
+}
+
+/* 見出しは行の長さも揃える（1行目だけ長い、を防ぐ） */
+.welcome h1, .gate h2, .way h2, .style h2, .stepline, .qtext{
+  text-wrap:balance;
+}
+
+/* 中央寄せの短文は、折り返し幅を絞ったほうが読みやすい */
+.hi{ max-width:22em; margin-left:auto; margin-right:auto }
+.welcome p{ text-wrap:pretty }
+
+/* 回答ボタン（アイコンなし） */
+.sc{ justify-content:flex-start; padding:17px 20px; font-size:16.5px }

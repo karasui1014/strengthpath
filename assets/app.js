@@ -222,7 +222,7 @@ function vQuiz(p) {
         : (p.quiz.i % 8 === 0 ? say(pick(VOICE.quizMid), 'think', 48) : '')}
       <h2 class="qtext">${esc(q.t)}</h2>
       <div class="scale">
-        ${SCALE.map(s => `<button class="sc" data-ans="${s.v}"><i>${s.emoji}</i>${esc(s.label)}</button>`).join('')}
+        ${SCALE.map(s => `<button class="sc" data-ans="${s.v}">${esc(s.label)}</button>`).join('')}
       </div>
       <div class="qfoot">
         ${p.quiz.i > 0 ? '<button class="btn link" data-back="1">← ひとつ戻る</button>' : '<span></span>'}
@@ -302,7 +302,7 @@ function vGate(p) {
       ${p.gateQuiz.i === 0 ? say('まず、いまの状況だけ教えてください。正直なところで大丈夫です。', 'normal', 48) : ''}
       <h2 class="qtext">${esc(q[1])}</h2>
       <div class="scale">
-        ${SCALE.map(s => `<button class="sc" data-gans="${s.v}"><i>${s.emoji}</i>${esc(s.label)}</button>`).join('')}
+        ${SCALE.map(s => `<button class="sc" data-gans="${s.v}">${esc(s.label)}</button>`).join('')}
       </div>
       <div class="qfoot">
         ${p.gateQuiz.i > 0 ? '<button class="btn link" data-gback="1">← ひとつ戻る</button>' : '<span></span>'}
