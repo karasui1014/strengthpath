@@ -22,7 +22,7 @@ vm.createContext(ctx);
 const FILES = ['assets/data.js','assets/akari.js','assets/app.js'];
 vm.runInContext(FILES.map(read).join('\n') + `
 ;globalThis.API = { scoreGate, scoreAll, matchJobs, buildSteps, blankProfile, makePrompt,
-  flat, nextStep, doneCount, totalCount, timesMoved, ymd, today,
+  flat, nextStep, doneCount, totalCount, timesMoved, ymd, today, cleanStore, cleanProfile,
   TRAITS, STYLES, TYPES, JOBS, JOB_CATS, GATES, CHAPTERS, PROMPTS, THEMES, VOICE,
   Q_GATE, Q_TRAIT, Q_STYLE, SCALE, OTHER_WAYS, COMMON_STEPS, TYPE_STEPS, LEARN_LINK, MONEY_NOTE };`,
   ctx, { filename:'bundle.js' });
@@ -321,6 +321,82 @@ t('保存データがJSONとして往復できる', () => {
   const back = JSON.parse(JSON.stringify(S));
   eq(back.profiles[p.id].result.type, p.result.type);
   eq(A.timesMoved(back.profiles[p.id]), 1);
+});
+
+
+/* ================= 10. 外から来たデータの検証 ================= */
+group('10. 読み込みデータの検証（壊れたJSONで落ちないこと）');
+const goodStore = (() => { const p = A.blankProfile('カラスイ');
+  p.result = quiz(fill(24,3)); p.steps = A.buildSteps(p.result.type);
+  p.gate = gate(fill(8,3)); p.goal = {why:'旅行',reward:'ヘッドホン',hours:'夜30分'};
+  p.logs = [{date:'2026-08-27', text:'やった'}];
+  p.steps[0].items[0].done = true;
+  return { v:1, theme:'mint', dark:'on', mode:'self', activeId:p.id, selfId:p.id, profiles:{[p.id]:p} }; })();
+
+t('正常なデータはそのまま通る', () => {
+  const c = A.cleanStore(JSON.parse(JSON.stringify(goodStore)));
+  eq(c.theme,'mint'); eq(c.dark,'on');
+  const p = c.profiles[c.selfId];
+  eq(p.name,'カラスイ'); eq(p.goal.reward,'ヘッドホン'); eq(A.doneCount(p), 1);
+  return `${Object.keys(c.profiles).length}人 / 完了${A.doneCount(p)}`;
+});
+[['null', null], ['数値', 42], ['文字列', 'こんにちは'], ['空オブジェクト', {}],
+ ['配列', []], ['profilesが配列', {profiles:[]}], ['profilesが文字列', {profiles:'x'}],
+ ['profilesが空', {profiles:{}}],
+].forEach(([label, v]) => {
+  t(`${label} は読み込みを拒否する`, () => {
+    let threw = false;
+    try { A.cleanStore(v); } catch (e) { threw = true; }
+    ok(threw, '例外が出ていない（不正なデータを受け入れてしまう）');
+  });
+});
+t('知らないキーは捨てられる', () => {
+  const c = A.cleanStore({ profiles:{ a:{ name:'x' } }, selfId:'a', activeId:'a',
+    evil:'<script>', __proto__:{polluted:true}, theme:'存在しない色', dark:'変な値', mode:'変な値' });
+  ok(!('evil' in c), 'evil が残っている');
+  eq(c.theme,'sepia'); eq(c.dark,'auto'); eq(c.mode,'self');
+});
+t('壊れた持ち味スコアは0に丸められる', () => {
+  const p = { name:'x', result:{ type:'content', traits:{ hasshin: 99999, tankyu:'abc', nope: 50 }, styles:{} } };
+  const c = A.cleanProfile(p);
+  eq(c.result.traits.hasshin, 0); eq(c.result.traits.tankyu, 0);
+  ok(!('nope' in c.result.traits), '知らない持ち味が残っている');
+  eq(Object.keys(c.result.traits).length, 12);
+});
+t('知らない道は結果ごと捨てられる', () => {
+  eq(A.cleanProfile({ name:'x', result:{ type:'存在しない道' } }).result, null);
+});
+t('やることは現在の定義から作り直される', () => {
+  const c = A.cleanProfile({ name:'x', result:{type:'content',traits:{},styles:{}},
+    steps:[{items:[{text:'古い文言',done:true},{text:'発信する場所を1つだけ決める',done:true}]}] });
+  eq(A.flat({steps:c.steps}).length, 9, 'やることの数');
+  ok(!A.flat({steps:c.steps}).some(x => x.text === '古い文言'), '古い文言が残っている');
+  eq(A.doneCount(c), 1, '実在するものの完了状態だけ引き継ぐ');
+});
+t('長すぎる文字列は切り詰められる', () => {
+  const c = A.cleanProfile({ name:'あ'.repeat(9999), goal:{ why:'い'.repeat(9999) } });
+  ok(c.name.length <= 60, `名前が${c.name.length}文字`);
+  ok(c.goal.why.length <= 2000, `理由が${c.goal.why.length}文字`);
+  return `名前${c.name.length} / 理由${c.goal.why.length}`;
+});
+t('記録が多すぎる場合は上限で止まる', () => {
+  const logs = Array.from({length:99999}, (_,i) => ({date:'2026-01-01', text:'x'+i}));
+  const c = A.cleanProfile({ name:'x', logs });
+  ok(c.logs.length <= 500, `${c.logs.length}件`);
+  return `${c.logs.length}件に制限`;
+});
+t('記録やメモが配列でなくても落ちない', () => {
+  const c = A.cleanProfile({ name:'x', logs:'not-array', sessions:42, goal:'not-object' });
+  eq(c.logs, []); eq(c.sessions, []); eq(c.goal.why, '');
+});
+t('存在しないIDを指していたら自動で直る', () => {
+  const c = A.cleanStore({ profiles:{ a:{name:'x'} }, selfId:'いない', activeId:'いない' });
+  ok(c.profiles[c.selfId] && c.profiles[c.activeId], '参照が壊れたまま');
+});
+t('HTMLらしき文字列を入れても、そのまま保持されるだけ（描画側でescape）', () => {
+  const c = A.cleanProfile({ name:'<img src=x onerror=alert(1)>' });
+  ok(typeof c.name === 'string');
+  return '文字列として保持';
 });
 
 /* ================= 結果 ================= */

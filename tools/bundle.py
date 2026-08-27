@@ -68,6 +68,8 @@ css += '''
 html = f'''<meta charset="UTF-8">
 <title>StrengthPath</title>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow, noarchive">
+<meta name="referrer" content="no-referrer">
 <style>
 {css}
 </style>

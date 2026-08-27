@@ -23,13 +23,74 @@ function blankProfile(name) {
 function load() {
   try {
     const d = JSON.parse(localStorage.getItem(KEY) || 'null');
-    if (d && d.profiles) return d;
-  } catch (e) {}
+    if (d && d.profiles) return cleanStore(d);
+  } catch (e) { console.warn('保存データを読み直せなかったので、新しく始めます'); }
   const p = blankProfile('あなた');
   return { v: 1, theme: 'sepia', dark: 'auto', mode: 'self',
            activeId: p.id, selfId: p.id, profiles: { [p.id]: p } };
 }
 function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
+
+/* ===== 読み込んだデータの検証 =====
+   外から来たJSONをそのまま信用すると、壊れた形のままアプリが動かなくなる。
+   知っているキーだけを拾い、型と長さを揃えてから使う。 */
+const LIM = { text: 2000, name: 60, list: 500 };
+const str = (v, max) => (typeof v === 'string' ? v : '').slice(0, max || LIM.text);
+const num = (v, lo, hi, d) => (typeof v === 'number' && isFinite(v) && v >= lo && v <= hi) ? v : d;
+const pick1 = (v, allowed, d) => allowed.includes(v) ? v : d;
+
+function cleanProfile(raw) {
+  const p = blankProfile(str(raw && raw.name, LIM.name) || 'あなた');
+  if (!raw || typeof raw !== 'object') return p;
+  if (typeof raw.id === 'string' && raw.id) p.id = raw.id.slice(0, 40);
+  p.createdAt = /^\d{4}-\d{2}-\d{2}$/.test(raw.createdAt) ? raw.createdAt : today();
+  p.goal = { why: str(raw.goal && raw.goal.why), reward: str(raw.goal && raw.goal.reward),
+             hours: str(raw.goal && raw.goal.hours) };
+
+  const pctMap = (o, keys) => { const r = {}; keys.forEach(k => r[k] = num(o && o[k], 0, 100, 0)); return r; };
+  if (raw.result && TYPES[raw.result.type]) {
+    p.result = { type: raw.result.type,
+      traits: pctMap(raw.result.traits, Object.keys(TRAITS)),
+      styles: pctMap(raw.result.styles, Object.keys(STYLES)),
+      date: str(raw.result.date, 10) };
+  }
+  if (raw.gate) {
+    p.gate = { motive: num(raw.gate.motive, 4, 16, 8), room: num(raw.gate.room, 4, 16, 8),
+      tier: pick1(raw.gate.tier, ['ready', 'time', 'other'], 'ready'), date: str(raw.gate.date, 10) };
+  }
+  /* やることは、いまの定義から作り直したうえで完了状態だけ引き継ぐ。
+     保存されたテキストを信じると、古い版や壊れた文言がそのまま残ってしまう。 */
+  if (p.result) {
+    p.steps = buildSteps(p.result.type);
+    const doneTexts = new Set();
+    (Array.isArray(raw.steps) ? raw.steps : []).forEach(c =>
+      (c && Array.isArray(c.items) ? c.items : []).forEach(x => { if (x && x.done) doneTexts.add(str(x.text)); }));
+    p.steps.forEach(c => c.items.forEach(x => { if (doneTexts.has(x.text)) { x.done = true; x.at = null; } }));
+  }
+  p.logs = (Array.isArray(raw.logs) ? raw.logs : []).slice(-LIM.list)
+    .map(l => ({ date: str(l && l.date, 10), text: str(l && l.text) }))
+    .filter(l => l.date && l.text);
+  p.sessions = (Array.isArray(raw.sessions) ? raw.sessions : []).slice(-LIM.list)
+    .map(s => ({ date: str(s && s.date, 10), note: str(s && s.note), next: str(s && s.next) }))
+    .filter(s => s.date && s.note);
+  return p;
+}
+
+function cleanStore(raw) {
+  if (!raw || typeof raw !== 'object' || !raw.profiles || typeof raw.profiles !== 'object')
+    throw new Error('形式がちがいます');
+  const profiles = {};
+  Object.values(raw.profiles).slice(0, 50).forEach(r => { const p = cleanProfile(r); profiles[p.id] = p; });
+  const ids = Object.keys(profiles);
+  if (!ids.length) throw new Error('中身が空です');
+  const selfId = profiles[raw.selfId] ? raw.selfId : ids[0];
+  return { v: 1,
+    theme: pick1(raw.theme, Object.keys(THEMES), 'sepia'),
+    dark: pick1(raw.dark, ['auto', 'on', 'off'], 'auto'),
+    mode: pick1(raw.mode, ['self', 'coach'], 'self'),
+    activeId: profiles[raw.activeId] ? raw.activeId : selfId,
+    selfId, profiles };
+}
 const P = () => S.profiles[S.activeId] || S.profiles[S.selfId];
 
 /* ========== テーマ ========== */
@@ -573,15 +634,15 @@ function vPeople() {
           ${x.id === S.selfId ? '' : `<button class="del" data-del="${x.id}">消す</button>`}
         </div>`).join('')}
       </div>
-      <div class="row"><input id="newname" placeholder="名前"><button class="btn" data-addp="1">追加</button></div>
+      <div class="row"><input id="newname" maxlength="60" placeholder="名前"><button class="btn" data-addp="1">追加</button></div>
     </div>
     ${p.result ? `<div class="soft">
       <div class="mini">${esc(p.name)} の面談メモ</div>
       <ul class="loglist">${p.sessions.length ? p.sessions.slice().reverse().map(s =>
         `<li><span class="ld">${fmtDate(s.date)}</span><span class="lt">${esc(s.note)}${s.next ? `<em class="nx">→ ${esc(s.next)}</em>` : ''}</span></li>`).join('')
         : '<li class="dim">まだありません</li>'}</ul>
-      <textarea id="snote" rows="3" placeholder="今回のメモ"></textarea>
-      <input id="snext" placeholder="次回までにやること">
+      <textarea id="snote" rows="3" maxlength="2000" placeholder="今回のメモ"></textarea>
+      <input id="snext" maxlength="500" placeholder="次回までにやること">
       <button class="btn" data-addses="1">記録する</button>
     </div>` : ''}`;
 }
@@ -601,11 +662,11 @@ function vSettings(p) {
 
     <h3 class="sec">あなたのこと</h3>
     <div class="soft">
-      <label class="fl">呼び名<input id="gname" value="${esc(p.name)}"></label>
+      <label class="fl">呼び名<input id="gname" maxlength="60" value="${esc(p.name)}"></label>
       <label class="fl">やる理由（あとで思い出せるように）
-        <textarea id="gwhy" rows="2" placeholder="例：月5万あれば、家族と旅行に行ける">${esc(p.goal.why)}</textarea></label>
-      <label class="fl">ごほうび<input id="greward" value="${esc(p.goal.reward)}" placeholder="例：ぜんぶ終わったら好きなヘッドホンを買う"></label>
-      <label class="fl">使えそうな時間<input id="ghours" value="${esc(p.goal.hours)}" placeholder="例：夜に30分くらい"></label>
+        <textarea id="gwhy" rows="2" maxlength="500" placeholder="例：月5万あれば、家族と旅行に行ける">${esc(p.goal.why)}</textarea></label>
+      <label class="fl">ごほうび<input id="greward" maxlength="200" value="${esc(p.goal.reward)}" placeholder="例：ぜんぶ終わったら好きなヘッドホンを買う"></label>
+      <label class="fl">使えそうな時間<input id="ghours" maxlength="200" value="${esc(p.goal.hours)}" placeholder="例：夜に30分くらい"></label>
       <button class="btn" data-savegoal="1">しまう</button>
     </div>
 
@@ -738,9 +799,14 @@ function bind(p) {
   on('[data-import]', 'click', () => {
     const i = document.createElement('input'); i.type = 'file'; i.accept = 'application/json';
     i.onchange = () => { const f = i.files[0]; if (!f) return; const r = new FileReader();
-      r.onload = () => { try { const d = JSON.parse(r.result); if (!d.profiles) throw 0;
-        if (!confirm('いまのデータに上書きします。よろしいですか？')) return;
-        S = d; save(); go('home'); } catch (_) { alert('読み込めませんでした。'); } };
+      r.onload = () => {
+        let next;
+        try { next = cleanStore(JSON.parse(r.result)); }
+        catch (_) { alert('このファイルは読み込めませんでした。書き出したJSONを選んでください。'); return; }
+        const n = Object.keys(next.profiles).length;
+        if (!confirm(`${n}人分のデータで、いまの内容を置きかえます。よろしいですか？`)) return;
+        S = next; save(); go('home'); toast('読み込みました。', 'happy');
+      };
       r.readAsText(f); };
     i.click();
   });
