@@ -97,6 +97,7 @@ function cleanStore(raw) {
     dark: pick1(raw.dark, ['auto', 'on', 'off'], 'auto'),
     mode: pick1(raw.mode, ['self', 'coach'], 'self'),
     activeId: profiles[raw.activeId] ? raw.activeId : selfId,
+    installClosed: raw.installClosed === true,
     selfId, profiles };
 }
 const P = () => S.profiles[S.activeId] || S.profiles[S.selfId];
@@ -427,6 +428,7 @@ function vClues(p) {
     <button class="btn ghost wide" data-nav="jobs">20コぜんぶ見る</button>
 
     <button class="btn xl" data-nav="book">やることを見る</button>
+    ${installCard()}
     ${p.depth === 'full' ? '' : `<div class="soft deepen">
       <div class="mini">もっと正確にしたい人だけ</div>
       <p>いまの結果は${CORE_COUNT}問ぶんです。あと${EXTRA_COUNT}問（1分）答えると、
@@ -766,7 +768,8 @@ function vPeople() {
 
 /* ========== 設定 ========== */
 function vSettings(p) {
-  return `<h3 class="sec">いろ</h3>
+  return `${installCard()}
+    <h3 class="sec">いろ</h3>
     <div class="themes">
       ${Object.entries(THEMES).map(([k, t]) => `<button class="th${S.theme === k ? ' on' : ''}" data-theme="${k}">
         <span class="sw" style="background:linear-gradient(135deg,${t.a},${t.b})"></span>
@@ -823,6 +826,15 @@ function bind(p) {
     jobOpen = jobOpen === id ? null : id; render();
   });
   on('[data-ext]', 'click', e => window.open(e.currentTarget.dataset.ext, '_blank', 'noopener'));
+  on('[data-install]', 'click', async () => {
+    if (!installPrompt) return;
+    installPrompt.prompt();
+    const r = await installPrompt.userChoice.catch(() => null);
+    installPrompt = null;
+    if (r && r.outcome === 'accepted') toast(INSTALL.done, 'happy');
+    render();
+  });
+  on('[data-noinstall]', 'click', () => { S.installClosed = true; render(); });
 
   const answerQuiz = val => {
     p.quiz.a[QALL(p.quiz.extra)[p.quiz.i].k] = val;
@@ -967,8 +979,39 @@ function openSheet(title, body, btn, fn, why) {
 }
 function closeSheet() { const s = $('#sheet'); if (s) { s.classList.remove('in'); setTimeout(() => s.remove(), 250); } }
 
+/* ========== ホーム画面に追加 ========== */
+const isStandalone = () => matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+const isIOS = () => /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+  (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+let installPrompt = null;   /* Androidなどで拾える、OS側の追加ダイアログ */
+
+/* 追加できる状態か。すでに入れている人と、断った人には出さない */
+function canInstall() {
+  if (isStandalone()) return false;
+  if (S.installClosed) return false;
+  return !!installPrompt || isIOS();
+}
+
+function installCard() {
+  if (!canInstall()) return '';
+  const ios = isIOS();
+  return `<div class="soft install">
+    <div class="mini">📱 ${esc(INSTALL.title)}</div>
+    <p>${esc(INSTALL.lead)}</p>
+    ${ios
+      ? `<p class="dim">${esc(INSTALL.ios.lead)}</p>
+         <ol class="steps-ios">${INSTALL.ios.steps.map(s => `<li>${esc(s)}</li>`).join('')}</ol>`
+      : `<p class="dim">${esc(INSTALL.other.lead)}</p>
+         <button class="btn" data-install="1">${esc(INSTALL.other.cta)}</button>`}
+    <button class="btn link" data-noinstall="1">${esc(INSTALL.later)}</button>
+  </div>`;
+}
+
 /* ========== 起動 ========== */
 akariImgProbe();
+/* Androidなどが出す「追加しますか」を、こちらのタイミングで出せるよう受け取っておく */
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); installPrompt = e; render(); });
+window.addEventListener('appinstalled', () => { installPrompt = null; render(); });
 matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { if (S.dark === 'auto') applyTheme(); });
 render();
 /* ローカル開発中はSWを登録しない（古いキャッシュが配信される事故を防ぐため） */

@@ -14,7 +14,9 @@ const ctx = { console,
   matchMedia:()=>({matches:false, addEventListener(){}}),
   document:{ documentElement:{style:{setProperty(){}},dataset:{}}, querySelector:stub,
     querySelectorAll:()=>[], addEventListener(){}, createElement:stub, body:{appendChild(){}} },
-  navigator:{}, requestAnimationFrame(){}, setTimeout(){}, clearTimeout(){},
+  navigator:{ userAgent:'node', platform:'node', maxTouchPoints:0 },
+  addEventListener(){}, removeEventListener(){},
+  requestAnimationFrame(){}, setTimeout(){}, clearTimeout(){},
   location:{hostname:'localhost'}, Image:function(){}, caches:{keys:()=>Promise.resolve([])},
   performance:{now:()=>0}, Event:function(){} };
 ctx.window = ctx; ctx.globalThis = ctx;
@@ -24,6 +26,7 @@ vm.runInContext(FILES.map(read).join('\n') + `
 ;globalThis.API = { scoreGate, scoreAll, matchJobs, buildSteps, blankProfile, makePrompt,
   flat, nextStep, doneCount, totalCount, timesMoved, ymd, today, cleanStore, cleanProfile,
   QALL, CORE_COUNT, EXTRA_COUNT, carrySteps, navHtml, vHome, vClues, vJobs, vBook, vBuddy, P,
+  INSTALL, installCard, canInstall, isIOS, isStandalone,
   TRAITS, STYLES, TYPES, JOBS, JOB_CATS, GATES, CHAPTERS, PROMPTS, THEMES, VOICE,
   Q_GATE, GATE_CORE, Q_PAIR, Q_STYLE_PICK, pairOptions, SCALE, OTHER_WAYS, COMMON_STEPS, TYPE_STEPS, LEARN_LINK, MONEY_NOTE, YEN_NOTE };`,
   ctx, { filename:'bundle.js' });
@@ -671,6 +674,74 @@ t('元手ゼロで始められるものは、費用の冒頭が0円になって�
   ok(!zero.some(j => ['sedori', 'handmade', 'd2c', 'fudosan'].includes(j.id)),
     '元手が要るものが0円扱いになっている');
   return `${zero.length}件が元手0円`;
+});
+
+
+/* ================= 14. スマホで使えるか ================= */
+group('14. スマホ（ホーム画面に追加できるか）');
+t('manifest がアプリとして開く設定になっている', () => {
+  const m = JSON.parse(read('manifest.json'));
+  eq(m.display, 'standalone', 'ブラウザのUIが出てしまう');
+  ok(m.start_url && m.scope, 'start_url か scope が無い');
+  ok(m.name && m.short_name, '名前が無い');
+  return `${m.display} / ${m.orientation || '向き指定なし'}`;
+});
+t('アイコンに any と maskable の両方がある', () => {
+  const m = JSON.parse(read('manifest.json'));
+  const purposes = m.icons.map(i => i.purpose);
+  ok(purposes.some(p => p.includes('any')), 'any が無い');
+  ok(purposes.some(p => p.includes('maskable')), 'maskable が無い（Androidで角が欠ける）');
+  m.icons.forEach(i => ok(fs.existsSync(path.join(ROOT, i.src.replace('./',''))), `${i.src} が実在しない`));
+  return `${m.icons.length}枚`;
+});
+t('iPhone用の設定が入っている', () => {
+  const h = read('index.html');
+  ['apple-mobile-web-app-capable', 'apple-mobile-web-app-title',
+   'apple-mobile-web-app-status-bar-style', 'apple-touch-icon'].forEach(k =>
+    ok(h.includes(k), `${k} が無い`));
+});
+t('画面の切り欠き（ノッチ）に対応している', () => {
+  const h = read('index.html'), c = read('assets/style.css');
+  ok(h.includes('viewport-fit=cover'), 'viewport-fit=cover が無い');
+  ok(c.includes('safe-area-inset'), 'セーフエリアの指定が無い');
+});
+t('iOSでは、ホーム画面に追加する手順が出る', () => {
+  ok(INSTALL_HAS_IOS_STEPS(), '手順が無い');
+  ok(A.INSTALL.ios.steps.length >= 2, '手順が少なすぎる');
+  return A.INSTALL.ios.steps.length + '手順';
+});
+function INSTALL_HAS_IOS_STEPS() { return A.INSTALL && A.INSTALL.ios && Array.isArray(A.INSTALL.ios.steps); }
+t('案内には「あとで」の逃げ道がある', () => {
+  ok(A.INSTALL.later, '断る選択肢が無い');
+  return A.INSTALL.later;
+});
+t('一度断ったら、もう出さない', () => {
+  const c = A.cleanStore({ profiles:{ x:{name:'y'} }, selfId:'x', activeId:'x', installClosed:true });
+  eq(c.installClosed, true, '断ったことが保存されない');
+  const d = A.cleanStore({ profiles:{ x:{name:'y'} }, selfId:'x', activeId:'x' });
+  eq(d.installClosed, false);
+});
+t('すでにホーム画面から開いている人には出さない', () => {
+  const orig = ctx.matchMedia;
+  ctx.matchMedia = q => ({ matches: q.includes('standalone'), addEventListener(){} });
+  const shown = A.canInstall();
+  ctx.matchMedia = orig;
+  eq(shown, false, 'インストール済みなのに案内が出ている');
+});
+t('指で押せる大きさが確保されている', () => {
+  const c = read('assets/style.css');
+  ok(c.includes('@media (pointer: coarse)'), '指操作向けの指定が無い');
+  const m = c.match(/@media \(pointer: coarse\)\{([\s\S]*?)\n\}/);
+  ok(m, '指定が読めない');
+  const sizes = [...m[1].matchAll(/min-height:(\d+)px/g)].map(x => +x[1]);
+  ok(sizes.length >= 6, `対象が少なすぎる（${sizes.length}件）`);
+  ok(sizes.every(v => v >= 40), `44px未満がある: ${sizes.filter(v => v < 40).join(',')}`);
+  return `${sizes.length}種類 / 最小${Math.min(...sizes)}px`;
+});
+t('横スクロールが出る書き方をしていない', () => {
+  const c = read('assets/style.css');
+  ok(!/width:\s*\d{3,}px/.test(c.replace(/max-width[^;]*/g, '')), '固定幅の指定がある');
+  ok(c.includes('overflow-x:auto') || c.includes('overflow-x: auto'), '横長要素の逃がし方が無い');
 });
 
 /* ================= 結果 ================= */
