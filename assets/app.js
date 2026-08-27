@@ -420,6 +420,14 @@ function vBook(p) {
       </div>`;
     }).join('') : ''}
 
+    ${p.goal.reward ? `<div class="soft reward">
+      <div class="mini">ごほうび</div>
+      <p><b>${esc(p.goal.reward)}</b></p>
+      <p class="dim">${totalCount(p) - doneCount(p) > 0
+        ? `あと${totalCount(p) - doneCount(p)}つで、ここまで来ます。`
+        : 'ぜんぶ終わりました。受け取ってください。'}</p>
+    </div>` : ''}
+
     <h3 class="sec">これまで ${timesMoved(p)}回</h3>
     <div class="soft">
       ${p.logs.length ? `<ul class="loglist">${p.logs.slice().reverse().slice(0, 40).map(l =>
@@ -683,7 +691,7 @@ function bind(p) {
       'これならできそう', () => {
         p.logs.push({ date: today(), text: st.micro });
         closeSheet(); toast('ちゃんと動きました。', 'wink'); render();
-      });
+      }, p.goal.why);
   });
 
   on('[data-ai]', 'click', e => { aiSel = e.currentTarget.dataset.ai; render(); });
@@ -751,13 +759,14 @@ function toast(text, mood) {
   requestAnimationFrame(() => el.classList.add('in'));
   setTimeout(() => { el.classList.remove('in'); setTimeout(() => el.remove(), 300); }, 2200);
 }
-function openSheet(title, body, btn, fn) {
+function openSheet(title, body, btn, fn, why) {
   const el = document.createElement('div');
   el.className = 'sheet-wrap'; el.id = 'sheet';
   el.innerHTML = `<div class="sheet">
     ${akariTag('idea', 72)}
     <div class="mini">${esc(title)}</div>
     <p class="sheet-body">${esc(body)}</p>
+    ${why ? `<p class="sheet-why">はじめた理由：${esc(why)}</p>` : ''}
     <button class="btn xl" id="sheet-ok">${esc(btn)}</button>
     <button class="btn link" id="sheet-no">${esc(VOICE.skipDay)}</button>
   </div>`;

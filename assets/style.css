@@ -340,3 +340,10 @@ h1, h2, h3, p, li, summary,
 
 /* 回答ボタン（アイコンなし） */
 .sc{ justify-content:flex-start; padding:17px 20px; font-size:16.5px }
+
+/* ごほうび（きろく画面） */
+.reward{border-left:3px solid var(--acc)}
+.reward b{font-size:16px}
+/* 手が止まった日に、はじめた理由を添える */
+.sheet-why{font-size:13px;color:var(--dim);background:var(--soft);
+  border-radius:10px;padding:10px 13px;margin-top:12px;line-height:1.7}
