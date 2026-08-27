@@ -1,6 +1,6 @@
-/* 探偵手帳 Service Worker
+/* 一歩ノート Service Worker
    ⚠️ ファイルを更新したら必ず CACHE のバージョンを上げること */
-const CACHE = 'tantei-techo-v1';
+const CACHE = 'ippo-note-v1';
 const ASSETS = ['./','./index.html','./manifest.json',
   './assets/style.css','./assets/data.js','./assets/akari.js','./assets/app.js',
   './assets/akari/normal.png','./assets/akari/think.png','./assets/akari/surprised.png',

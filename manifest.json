@@ -1,7 +1,7 @@
 {
-  "name": "探偵手帳",
-  "short_name": "探偵手帳",
-  "description": "ローファイ探偵と、あなたの持ち味を調べる手帳",
+  "name": "一歩ノート",
+  "short_name": "一歩ノート",
+  "description": "持ち味から、次にやることを1つだけ決めるノート",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

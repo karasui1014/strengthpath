@@ -1,7 +1,7 @@
-/* 探偵手帳 - アプリ本体 */
+/* 一歩ノート - アプリ本体 */
 'use strict';
 
-const KEY = 'tantei-techo-v1';
+const KEY = 'ippo-note-v1';
 const $  = (s, r) => (r || document).querySelector(s);
 const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c =>
@@ -71,7 +71,7 @@ function scoreAll(a) {
 }
 const rank = o => Object.entries(o).sort((x, y) => y[1] - x[1]);
 
-/* ========== 一手（9つ） ========== */
+/* ========== やること（9つ） ========== */
 function buildSteps(type) {
   const ts = TYPE_STEPS[type] || {};
   return CHAPTERS.map(ch => ({ id: ch.id,
@@ -107,18 +107,18 @@ function render() {
 function topHtml(p) {
   return `<button class="brand" data-nav="home">
       <span class="bmark">${catSVG(30)}</span>
-      <span class="btxt">探偵手帳<em>${S.mode === 'coach' ? esc(p.name) : 'ローファイ探偵と'}</em></span>
+      <span class="btxt">一歩ノート<em>${S.mode === 'coach' ? esc(p.name) : '持ち味から、次の1つを'}</em></span>
     </button>
     <button class="icobtn" data-nav="settings" aria-label="設定">⚙</button>`;
 }
 function navHtml() {
-  const items = [['home', '🏠', 'ホーム'], ['clues', '🔎', 'てがかり'], ['book', '📓', '手帳'], ['buddy', '☕', '相棒']];
+  const items = [['home', '🏠', 'ホーム'], ['clues', '✨', 'もちあじ'], ['book', '📓', 'きろく'], ['buddy', '💬', 'そうだん']];
   if (S.mode === 'coach') items.push(['people', '👥', 'みんな']);
   return items.map(([v, i, l]) =>
     `<button class="nav-btn${view === v ? ' on' : ''}" data-nav="${v}"><span>${i}</span>${l}</button>`).join('');
 }
 
-/* 燈月悠のふきだし */
+/* ふきだし */
 function say(text, mood, size) {
   return `<div class="says">${akariTag(mood || 'normal', size || 62)}
     <div class="bubble">${esc(text)}</div></div>`;
@@ -132,15 +132,15 @@ function vHome(p) {
   const style = STYLES[rank(p.result.styles)[0][0]];
   const didToday = p.logs.some(l => l.date === today());
 
-  return `${say(didToday ? '今日はもう動きましたね。ゆっくりしてください。' : pick(AKARI.greetBack), didToday ? 'happy' : 'normal')}
+  return `${say(didToday ? '今日はもう動きましたね。ゆっくりしてください。' : pick(VOICE.greetBack), didToday ? 'happy' : 'normal')}
     ${ns ? `<div class="big-card">
         <div class="mini">${esc(ch.no)}・${esc(ch.title)}　${doneCount(p) + 1}/${totalCount(p)}</div>
         <h2 class="stepline">${esc(ns.text)}</h2>
         <button class="btn xl" data-fin="${ns.id}">やった！</button>
         <button class="btn link" data-tiny="1">気が乗らない日は、こっち</button>
       </div>`
-      : `<div class="big-card">${akariTag('surprised', 84)}<h2 class="stepline">${esc(AKARI.noStep)}</h2>
-        <button class="btn xl" data-again="1">つぎの9手をつくる</button></div>`}
+      : `<div class="big-card">${akariTag('surprised', 84)}<h2 class="stepline">${esc(VOICE.noStep)}</h2>
+        <button class="btn xl" data-again="1">つぎの9つをつくる</button></div>`}
 
     <div class="grid2">
       <button class="tile" data-nav="clues"><em>${t.emoji}</em><b>${esc(t.name)}</b><span>あなたに向いてる道</span></button>
@@ -155,11 +155,11 @@ function vHome(p) {
 function vWelcome() {
   return `<div class="welcome">
       ${akariTag('normal', 128)}
-      <div class="hi">${esc(AKARI.greetFirst)}</div>
-      <h1>調べるのが好きなあなたへ。<br><b>それ、探偵の才能です。</b></h1>
+      <div class="hi">${esc(VOICE.greetFirst)}</div>
+      <h1>集めるのが好きなあなたへ。<br><b>もう、材料はそろっています。</b></h1>
       <p>本もセミナーも、集めてきたものは全部むだになりません。
       あとは<b>どこから手をつけるか</b>だけ。34問、ぜんぶで3分です。</p>
-      <button class="btn xl" data-nav="quiz">調べてもらう</button>
+      <button class="btn xl" data-nav="quiz">はじめる</button>
       <ul class="easy">
         <li>1問3秒。指1本でOK</li>
         <li>途中でやめても、続きから始められます</li>
@@ -168,7 +168,7 @@ function vWelcome() {
     </div>`;
 }
 
-/* ========== 調査（クイズ） ========== */
+/* ========== しつもん ========== */
 const QALL = () => [...Q_TRAIT.map((q, i) => ({ k: 't' + i, t: q[1] })),
                     ...Q_STYLE.map((q, i) => ({ k: 's' + i, t: q[1] }))];
 
@@ -180,7 +180,7 @@ function vQuiz(p) {
     p.steps = buildSteps(p.result.type);
     p.quiz = null; save();
     setTimeout(() => go('clues'), 420);
-    return `<div class="welcome">${akariTag('happy', 128)}<div class="hi">${esc(AKARI.quizEnd)}</div></div>`;
+    return `<div class="welcome">${akariTag('happy', 128)}<div class="hi">${esc(VOICE.quizEnd)}</div></div>`;
   }
   const left = qs.length - p.quiz.i;
   return `<div class="quiz">
@@ -188,8 +188,8 @@ function vQuiz(p) {
         <div class="bar"><i style="width:${p.quiz.i / qs.length * 100}%"></i></div>
         <span class="mini">あと${left}問</span>
       </div>
-      ${p.quiz.i === 0 ? say(AKARI.quizStart, 'normal', 48)
-        : (p.quiz.i % 8 === 0 ? say(pick(AKARI.quizMid), 'think', 48) : '')}
+      ${p.quiz.i === 0 ? say(VOICE.quizStart, 'normal', 48)
+        : (p.quiz.i % 8 === 0 ? say(pick(VOICE.quizMid), 'think', 48) : '')}
       <h2 class="qtext">${esc(q.t)}</h2>
       <div class="scale">
         ${SCALE.map(s => `<button class="sc" data-ans="${s.v}"><i>${s.emoji}</i>${esc(s.label)}</button>`).join('')}
@@ -201,13 +201,13 @@ function vQuiz(p) {
     </div>`;
 }
 
-/* ========== てがかり（結果） ========== */
+/* ========== もちあじ（結果） ========== */
 function vClues(p) {
   if (!p.result) return notyet();
   const r = p.result, t = TYPES[r.type];
   const top = rank(r.traits).slice(0, 5);
   const style = STYLES[rank(r.styles)[0][0]];
-  return `${say(AKARI.resultTop, 'happy')}
+  return `${say(VOICE.resultTop, 'happy')}
     <div class="big-card way">
       <div class="mini">向いてる道</div>
       <h2><span class="wemoji">${t.emoji}</span>${esc(t.name)}<em>${esc(t.sub)}</em></h2>
@@ -238,12 +238,12 @@ function vClues(p) {
       <div class="rx"><b>ラクに進むコツ</b>${esc(style.tip)}</div>
     </div>
 
-    <button class="btn xl" data-nav="book">手帳をひらく</button>
-    <button class="btn link wide" data-retake="1">もう一度、調べてもらう</button>`;
+    <button class="btn xl" data-nav="book">やることを見る</button>
+    <button class="btn link wide" data-retake="1">もう一度やってみる</button>`;
 }
 const notyet = () => `<div class="welcome">${akariTag('think', 110)}
-    <div class="hi">まだ、調べていませんね。</div>
-    <button class="btn xl" data-nav="quiz">3分で調べてもらう</button></div>`;
+    <div class="hi">まだ、はじめていませんね。</div>
+    <button class="btn xl" data-nav="quiz">3分ではじめる</button></div>`;
 
 /* ========== 手帳 ========== */
 function vBook(p) {
@@ -254,11 +254,11 @@ function vBook(p) {
       ${ns ? `<h2 class="stepline">${esc(ns.text)}</h2>
         <button class="btn xl" data-fin="${ns.id}">やった！</button>
         <button class="btn link" data-tiny="1">気が乗らない日は、こっち</button>`
-        : `<h2 class="stepline">${esc(AKARI.noStep)}</h2>
-           <button class="btn xl" data-again="1">つぎの9手をつくる</button>`}
+        : `<h2 class="stepline">${esc(VOICE.noStep)}</h2>
+           <button class="btn xl" data-again="1">つぎの9つをつくる</button>`}
     </div>
 
-    <button class="btn link wide" data-all="1">${showAll ? '9手を閉じる' : 'ぜんぶの9手を見る'}</button>
+    <button class="btn link wide" data-all="1">${showAll ? '閉じる' : 'ぜんぶ見る'}</button>
     ${showAll ? p.steps.map((c, i) => {
       const ci = CHAPTERS[i];
       return `<div class="soft">
@@ -277,13 +277,13 @@ function vBook(p) {
     </div>`;
 }
 
-/* ========== 相棒（AI） ========== */
+/* ========== そうだん（AI） ========== */
 function vBuddy(p) {
   if (!p.result) return notyet();
   const list = PROMPTS.filter(x => S.mode === 'coach' || x.id !== 'coach');
   return `${say('話してみましょうか。私の見立ても、そのまま渡しますね。', 'normal')}
     <div class="soft">
-      <p class="dim">選ぶと、あなたの調査結果と進み具合を全部入れた文章ができます。
+      <p class="dim">選ぶと、あなたの結果と進み具合を全部入れた文章ができます。
       コピーして ChatGPT や Claude に貼るだけです。</p>
       <div class="prompts">
         ${list.map(x => `<button class="pbtn${aiSel === x.id ? ' on' : ''}" data-ai="${x.id}">
@@ -311,13 +311,13 @@ function ctx(p) {
 ・向いてる道：${t.name}（${t.sub}）＝ ${t.catch}
 ・持ち味 上位5：${top}
 ・進みグセ：${st.name}（${st.catch}）→ ${st.tip}
-・進み具合：9手中 ${doneCount(p)}手／これまで${timesMoved(p)}回動いた
+・進み具合：9つ中 ${doneCount(p)}つ／これまで${timesMoved(p)}回動いた
 ・やる理由：${p.goal.why || '未記入'}
 ・ごほうび：${p.goal.reward || '未記入'}
 ・使える時間：${p.goal.hours || '未記入'}
 
-【いま目の前にある一手】
-${ns ? ns.text : '（9手ぜんぶ完了）'}
+【いま目の前にあること】
+${ns ? ns.text : '（ぜんぶ完了）'}
 
 【最近の動き】
 ${recent}`;
@@ -325,7 +325,7 @@ ${recent}`;
 
 function makePrompt(p, id) {
   const rule = `【あなたの役割】
-あなたは、副業をはじめたい人の相棒です。次のことを必ず守ってください。
+あなたは、副業をはじめたい人の相談相手です。次のことを必ず守ってください。
 
 1. 相手を絶対に否定しない。「できていない」「動けていない」「原因」といった言葉は使わない。
 2. 新しいノウハウを増やさない。この人はもう十分に知っています。必要なのは、どれをやるか決めることだけです。
@@ -342,7 +342,7 @@ function makePrompt(p, id) {
 はじめての相談です。1つずつ、私の返事を待ってから進めてください。
 ① 上の情報を読んで、私の持ち味がいちばん活きそうな形を1つ挙げて、それでいいか質問で確かめる
 ② 私の答えを聞いて、3ヶ月後にこうなっていたい姿を一文にまとめる
-③ 今週やる一手を1つだけ、15分で終わるサイズにして提案する
+③ 今週やることを1つだけ、15分で終わるサイズにして提案する
 ④ それをやったと報告する場所を一緒に決める`;
 
   if (id === 'weekly') return `${base}
@@ -351,7 +351,7 @@ function makePrompt(p, id) {
 一週間のふりかえりです。
 ① 最近の動きを見て、進んだところを具体的に1つ以上見つけて言葉にする
 ② できなかったことは責めず、「サイズが大きすぎただけ」という前提で一緒に見直す
-③ 来週の一手を1つ決める。先週やれなかったなら、半分の大きさにして出す
+③ 来週やることを1つ決める。先週やれなかったなら、半分の大きさにして出す
 ④ 最後に、来週の私に向けた短い一言を書く`;
 
   if (id === 'stuck') {
@@ -363,7 +363,7 @@ function makePrompt(p, id) {
 
 【今回してほしいこと】
 ① 気が乗らないのは自然なことだと、まず一言だけ添えてください（長い励ましはいりません）
-② 目の前の一手を、3分で終わるサイズまで小さくしてください
+② 目の前のやることを、3分で終わるサイズまで小さくしてください
    ※調べる・考える・計画するのは無しで。「書く」「送る」「押す」など、手が動くものにしてください
 ③ それすら重い日のために、30秒でできる代わりの動きも1つ用意してください
 ④ どちらかをやったら、なんと報告すればいいか一文で書いてください`;
@@ -419,7 +419,7 @@ function vPeople() {
         `<li><span class="ld">${fmtDate(s.date)}</span><span class="lt">${esc(s.note)}${s.next ? `<em class="nx">→ ${esc(s.next)}</em>` : ''}</span></li>`).join('')
         : '<li class="dim">まだありません</li>'}</ul>
       <textarea id="snote" rows="3" placeholder="今回のメモ"></textarea>
-      <input id="snext" placeholder="次回までの一手">
+      <input id="snext" placeholder="次回までにやること">
       <button class="btn" data-addses="1">記録する</button>
     </div>` : ''}`;
 }
@@ -462,9 +462,6 @@ function vSettings(p) {
       <p class="dim">この端末の中だけに保存されています。たまに書き出しておくと安心です。</p>
       <button class="btn link danger" data-reset="1">${esc(p.name)}のデータを消す</button>
     </div>
-    <div class="soft quote">
-      ${catSVG(34)}<p>「${esc(AKARI.quote)}」<em>— 燈月悠</em></p>
-    </div>
     <p class="fine">本ツールの持ち味・進みグセ・道の分類は、副業での動きやすさに絞った独自のものです。
     ストレングスファインダー®／CliftonStrengths®（Gallup社の登録商標）とは無関係で、同社の資質名・解説文は使用していません。</p>`;
 }
@@ -482,7 +479,7 @@ function bind(p) {
   on('[data-back]', 'click', () => { p.quiz.i = Math.max(0, p.quiz.i - 1); render(); });
   on('[data-pause]', 'click', () => { save(); go('home'); });
   on('[data-retake]', 'click', () => {
-    if (!confirm('もう一度調べますか？（手帳の記録はそのまま残ります）')) return;
+    if (!confirm('もう一度やってみますか？（記録はそのまま残ります）')) return;
     p.quiz = { i: 0, a: {} }; go('quiz');
   });
 
@@ -493,7 +490,7 @@ function bind(p) {
       if (x.id === id) { x.done = true; x.at = today(); txt = x.text; }
     }));
     p.logs.push({ date: today(), text: txt });
-    toast(pick(AKARI.doneStep), pick(['happy', 'wink']));
+    toast(pick(VOICE.doneStep), pick(['happy', 'wink']));
     render();
   });
   on('[data-step]', 'change', e => {
@@ -506,7 +503,7 @@ function bind(p) {
   });
   on('[data-all]', 'click', () => { showAll = !showAll; render(); });
   on('[data-again]', 'click', () => {
-    if (!confirm('つぎの9手をつくりますか？')) return;
+    if (!confirm('つぎの9つをつくりますか？')) return;
     p.steps = buildSteps(p.result.type); go('book');
   });
 
@@ -558,7 +555,7 @@ function bind(p) {
   on('[data-export]', 'click', () => {
     const a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob([JSON.stringify(S, null, 2)], { type: 'application/json' }));
-    a.download = `探偵手帳_${today()}.json`; a.click(); URL.revokeObjectURL(a.href);
+    a.download = `一歩ノート_${today()}.json`; a.click(); URL.revokeObjectURL(a.href);
   });
   on('[data-import]', 'click', () => {
     const i = document.createElement('input'); i.type = 'file'; i.accept = 'application/json';
@@ -570,7 +567,7 @@ function bind(p) {
     i.click();
   });
   on('[data-reset]', 'click', () => {
-    if (!confirm(`${p.name}の調査結果と記録をぜんぶ消します。よろしいですか？`)) return;
+    if (!confirm(`${p.name}の結果と記録をぜんぶ消します。よろしいですか？`)) return;
     const f = blankProfile(p.name); f.id = p.id; S.profiles[p.id] = f; go('home');
   });
 }
@@ -592,7 +589,7 @@ function openSheet(title, body, btn, fn) {
     <div class="mini">${esc(title)}</div>
     <p class="sheet-body">${esc(body)}</p>
     <button class="btn xl" id="sheet-ok">${esc(btn)}</button>
-    <button class="btn link" id="sheet-no">${esc(AKARI.skipDay)}</button>
+    <button class="btn link" id="sheet-no">${esc(VOICE.skipDay)}</button>
   </div>`;
   document.body.appendChild(el);
   requestAnimationFrame(() => el.classList.add('in'));
