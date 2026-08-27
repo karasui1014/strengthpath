@@ -25,7 +25,7 @@ vm.runInContext(FILES.map(read).join('\n') + `
   flat, nextStep, doneCount, totalCount, timesMoved, ymd, today, cleanStore, cleanProfile,
   QALL, CORE_COUNT, EXTRA_COUNT, carrySteps, navHtml, vHome, vClues, vJobs, vBook, vBuddy, P,
   TRAITS, STYLES, TYPES, JOBS, JOB_CATS, GATES, CHAPTERS, PROMPTS, THEMES, VOICE,
-  Q_GATE, Q_TRAIT, Q_STYLE, SCALE, OTHER_WAYS, COMMON_STEPS, TYPE_STEPS, LEARN_LINK, MONEY_NOTE };`,
+  Q_GATE, GATE_CORE, Q_PAIR, Q_STYLE_PICK, PAIR_SCALE, SCALE, OTHER_WAYS, COMMON_STEPS, TYPE_STEPS, LEARN_LINK, MONEY_NOTE };`,
   ctx, { filename:'bundle.js' });
 const A = ctx.API;
 
@@ -47,7 +47,22 @@ const ok = (c, m) => { if (!c) throw new Error(m || '条件が満たされてい
 
 /* ---------- ヘルパ ---------- */
 const gate = v => { const a={}; v.forEach((x,i)=>a['g'+i]=x); return A.scoreGate(a); };
-const quiz = (t24, s10) => { const a={}; t24.forEach((v,i)=>a['t'+i]=v); (s10||Array(10).fill(3)).forEach((v,i)=>a['s'+i]=v); return A.scoreAll(a); };
+/* 前半6問の「どっち寄り」に答えた形を作る。値は1〜4（4=A寄り） */
+const quiz = (pairVals, styleCode) => {
+  const a = {};
+  (pairVals || []).forEach((v, i) => a['p' + i] = v);
+  a['y0'] = styleCode || 'perfect';
+  return A.scoreAll(a);
+};
+/* 特定の持ち味を高くした回答を作る */
+const lean = (want) => {
+  const a = {};
+  A.Q_PAIR.slice(0, 6).forEach(([pair], i) => {
+    a['p' + i] = want.includes(pair[0]) ? 4 : want.includes(pair[1]) ? 1 : 2 + (i % 2);
+  });
+  a['y0'] = 'perfect';
+  return A.scoreAll(a);
+};
 const fill = (n,v) => Array(n).fill(v);
 
 /* ================= 1. 適性チェック ================= */
@@ -86,38 +101,42 @@ t('GATES に3分岐ぶんの文言が揃っている', () => {
 
 /* ================= 2. 持ち味スコアリング ================= */
 group('2. 持ち味チェック');
-t('設問は 持ち味24 + 進みグセ10 = 34問', () => {
-  eq(A.Q_TRAIT.length, 24); eq(A.Q_STYLE.length, 10);
-  return `合計${A.Q_TRAIT.length + A.Q_STYLE.length}問`;
+t('どっち寄りは12問（前半6が必須・後半6が追加）', () => {
+  eq(A.Q_PAIR.length, 12);
+  return `必須6 + 追加6`;
 });
-t('選択肢は4段階（中間なし）', () => { eq(A.SCALE.length, 4); eq(A.SCALE.map(s=>s.v), [1,2,3,4]); });
-t('全問「そう！」で全持ち味 100%', () => {
-  const r = quiz(fill(24,4)); ok(Object.values(r.traits).every(v=>v===100));
+t('どっち寄りの選択肢は4段階', () => { eq(A.PAIR_SCALE.length, 4); eq(A.PAIR_SCALE.map(x=>x.v), [4,3,2,1]); });
+t('片側にすべて寄せると、その持ち味が100%・反対側が0%になる', () => {
+  const a = {}; A.Q_PAIR.slice(0,6).forEach((_, i) => a['p'+i] = 4); a['y0']='perfect';
+  const r = A.scoreAll(a);
+  A.Q_PAIR.slice(0,6).forEach(([p]) => { eq(r.traits[p[0]], 100, p[0]); eq(r.traits[p[1]], 0, p[1]); });
 });
-t('全問「ちがう」で全持ち味 0%', () => {
-  const r = quiz(fill(24,1)); ok(Object.values(r.traits).every(v=>v===0));
+t('まんなかで答えると、全持ち味が中間に寄る', () => {
+  const a = {}; A.Q_PAIR.slice(0,6).forEach((_, i) => a['p'+i] = i % 2 ? 2 : 3); a['y0']='perfect';
+  const r = A.scoreAll(a);
+  ok(Object.values(r.traits).every(v => v >= 33 && v <= 67), '極端に振れている');
 });
-t('持ち味は12個ぜんぶ算出される', () => eq(Object.keys(quiz(fill(24,3)).traits).length, 12));
-t('進みグセは5個ぜんぶ算出される', () => eq(Object.keys(quiz(fill(24,3)).styles).length, 5));
+t('持ち味は12個ぜんぶ算出される', () => eq(Object.keys(quiz(fill(6,3)).traits).length, 12));
+t('進みグセは5個ぜんぶ算出される', () => eq(Object.keys(quiz(fill(6,3)).styles).length, 5));
 t('スコアは 0〜100 に収まる', () => {
-  for (let n=0;n<300;n++){ const r = quiz(fill(24,0).map(()=>1+Math.floor(Math.random()*4)));
+  for (let n=0;n<300;n++){ const r = quiz(fill(6,0).map(()=>1+Math.floor(Math.random()*4)));
     Object.values(r.traits).concat(Object.values(r.styles)).forEach(v=>ok(v>=0&&v<=100, `範囲外 ${v}`)); }
 });
-t('一律回答でも道が偏らない（伝える道に固定されない）', () => {
-  // 偏差ベース判定なので、一律回答は既定値の伝える道になるのが仕様
-  eq(quiz(fill(24,4)).type, 'content'); eq(quiz(fill(24,1)).type, 'content');
-  return '一律時は既定値 content（仕様どおり）';
+t('まんなか一辺倒のときは、いちばん始めやすい道になる', () => {
+  const a = {}; A.Q_PAIR.slice(0,6).forEach((_, i) => a['p'+i] = 2); a['y0']='perfect';
+  ok(A.TYPES[A.scoreAll(a).type], '道が出ない');
+  return A.TYPES[A.scoreAll(a).type].name;
 });
 t('8つの道すべてに到達できる', () => {
   const seen = new Set();
-  for (let n=0;n<4000;n++) seen.add(quiz(fill(24,0).map(()=>1+Math.floor(Math.random()*4))).type);
+  for (let n=0;n<4000;n++) seen.add(quiz(fill(6,0).map(()=>1+Math.floor(Math.random()*4))).type);
   const miss = Object.keys(A.TYPES).filter(k=>!seen.has(k));
   ok(miss.length===0, `到達しない道: ${miss.join(',')}`);
   return `${seen.size}/8`;
 });
-t('持ち味が高いほうの道が選ばれる（発信寄り）', () => {
-  const r = quiz([2,2,2,2,2,2,2,2,2,2,2,2,2,2,4,4,2,2,4,4,4,4,2,2]);
-  ok(['content','plan','make'].includes(r.type), `想定外: ${r.type}`);
+t('発信寄りに答えると、発信系の道になる', () => {
+  const r = lean(['hasshin','chakuso','hyogen']);
+  ok(['content','plan','make','curate','teach'].includes(r.type), `想定外: ${r.type}`);
   return A.TYPES[r.type].name;
 });
 
@@ -137,16 +156,16 @@ t('カテゴリがすべて定義済み', () => {
   return Object.entries(A.JOBS.reduce((a,j)=>(a[A.JOB_CATS[j.cat].name]=(a[A.JOB_CATS[j.cat].name]||0)+1,a),{})).map(([k,v])=>`${k}${v}`).join(' ');
 });
 t('マッチングは件数を指定できる', () => {
-  const r = quiz(fill(24,3));
+  const r = quiz(fill(6,3));
   eq(A.matchJobs(r.traits,3).length, 3); eq(A.matchJobs(r.traits).length, 20);
 });
 t('相性スコアの降順で並ぶ', () => {
-  const m = A.matchJobs(quiz(fill(24,0).map(()=>1+Math.floor(Math.random()*4))).traits);
+  const m = A.matchJobs(quiz(fill(6,0).map(()=>1+Math.floor(Math.random()*4))).traits);
   for (let i=1;i<m.length;i++) ok(m[i-1].s >= m[i].s, '並び順が崩れている');
 });
 t('20件すべてが上位3に入りうる', () => {
   const seen = new Set();
-  for (let n=0;n<3000;n++){ const r = quiz(fill(24,0).map(()=>1+Math.floor(Math.random()*4)));
+  for (let n=0;n<3000;n++){ const r = quiz(fill(6,0).map(()=>1+Math.floor(Math.random()*4)));
     A.matchJobs(r.traits,3).forEach(m=>seen.add(m.job.id)); }
   const never = A.JOBS.filter(j=>!seen.has(j.id)).map(j=>j.name);
   ok(never.length===0, `上位3に入らない: ${never.join(',')}`);
@@ -210,7 +229,7 @@ t('日付はローカル時刻基準（UTCずれなし）', () => {
 /* ================= 6. そうだん（プロンプト） ================= */
 group('6. そうだん（AIプロンプト）');
 const pp = (() => { const p = A.blankProfile('テスト');
-  p.result = quiz(fill(24,3)); p.steps = A.buildSteps(p.result.type);
+  p.result = quiz(fill(6,3)); p.steps = A.buildSteps(p.result.type);
   p.gate = gate(fill(4,3)); return p; })();
 A.PROMPTS.forEach(x => {
   t(`${x.name} が生成される`, () => {
@@ -317,7 +336,7 @@ t('持ち味チェックの途中状態を保持できる', () => {
 });
 t('保存データがJSONとして往復できる', () => {
   const p = A.blankProfile('カラスイ');
-  p.result = quiz(fill(24,3)); p.steps = A.buildSteps(p.result.type);
+  p.result = quiz(fill(6,3)); p.steps = A.buildSteps(p.result.type);
   p.gate = gate(fill(4,3)); p.logs = [{date:'2026-08-27', text:'テスト'}];
   const S = { v:1, theme:'sepia', dark:'auto', mode:'self', activeId:p.id, selfId:p.id, profiles:{[p.id]:p} };
   const back = JSON.parse(JSON.stringify(S));
@@ -329,7 +348,7 @@ t('保存データがJSONとして往復できる', () => {
 /* ================= 10. 外から来たデータの検証 ================= */
 group('10. 読み込みデータの検証（壊れたJSONで落ちないこと）');
 const goodStore = (() => { const p = A.blankProfile('カラスイ');
-  p.result = quiz(fill(24,3)); p.steps = A.buildSteps(p.result.type);
+  p.result = quiz(fill(6,3)); p.steps = A.buildSteps(p.result.type);
   p.gate = gate(fill(4,3)); p.goal = {why:'旅行',reward:'ヘッドホン',hours:'夜30分'};
   p.logs = [{date:'2026-08-27', text:'やった'}];
   p.steps[0].items[0].done = true;
@@ -402,74 +421,110 @@ t('HTMLらしき文字列を入れても、そのまま保持されるだけ（�
 });
 
 
-/* ================= 11. 必須21問 / 追加17問 ================= */
-group('11. 答える量（めんどくさがり向けの分割）');
-t('必須は21問（適性4 + 持ち味12 + グセ5）', () => {
-  eq(A.Q_GATE.length, 4);
-  eq(A.QALL(false).length, 17);
-  eq(A.CORE_COUNT, 21);
-  return `適性${A.Q_GATE.length} + 持ち味とグセ${A.QALL(false).length} = ${A.CORE_COUNT}問`;
+/* ================= 11. 必須10問 / 追加8問 ================= */
+group('11. 答える量（1問で2つ測る形式）');
+t('必須は10問（適性3 + どっち寄り6 + グセ1）', () => {
+  eq(A.GATE_CORE, 3);
+  eq(A.QALL(false).length, 7);
+  eq(A.CORE_COUNT, 10);
+  return `適性${A.GATE_CORE} + どっち寄り6 + グセ1 = ${A.CORE_COUNT}問`;
 });
-t('追加は17問', () => { eq(A.QALL(true).length, 17); eq(A.EXTRA_COUNT, 17); });
+t('追加は8問', () => { eq(A.EXTRA_COUNT, 8); });
 t('必須と追加で全設問をちょうど覆う', () => {
   const all = [...A.QALL(false), ...A.QALL(true)].map(q => q.k);
   eq(new Set(all).size, all.length, '重複がある');
-  eq(all.length, A.Q_TRAIT.length + A.Q_STYLE.length);
+  eq(all.length, A.Q_PAIR.length + A.Q_STYLE_PICK.length);
 });
-t('必須だけで12の持ち味すべてが1問以上ある', () => {
-  const seen = {};
-  A.QALL(false).forEach(q => { if (q.k[0] === 't') seen[A.Q_TRAIT[+q.k.slice(1)][0]] = 1; });
-  eq(Object.keys(seen).length, 12);
+t('必須6問で12の持ち味すべてがちょうど1回ずつ出る', () => {
+  const c = {};
+  A.Q_PAIR.slice(0, 6).forEach(([p]) => p.forEach(k => c[k] = (c[k] || 0) + 1));
+  eq(Object.keys(c).length, 12);
+  ok(Object.values(c).every(v => v === 1), '登場回数が偏っている');
 });
-t('必須だけで5つの進みグセすべてが1問以上ある', () => {
-  const seen = {};
-  A.QALL(false).forEach(q => { if (q.k[0] === 's') seen[A.Q_STYLE[+q.k.slice(1)][0]] = 1; });
-  eq(Object.keys(seen).length, 5);
+t('追加6問でも12の持ち味すべてが1回ずつ出る', () => {
+  const c = {};
+  A.Q_PAIR.slice(6).forEach(([p]) => p.forEach(k => c[k] = (c[k] || 0) + 1));
+  eq(Object.keys(c).length, 12);
+  ok(Object.values(c).every(v => v === 1));
 });
-t('必須だけでも結果が出る（道・持ち味・グセすべて）', () => {
-  const a = {}; A.QALL(false).forEach((q, i) => a[q.k] = 1 + (i % 4));
+t('どっち寄りの左右が同じ持ち味になっていない', () => {
+  A.Q_PAIR.forEach(([p], i) => ok(p[0] !== p[1], `${i}問目が同じ持ち味どうし`));
+});
+t('どっち寄りの重みキーがすべて実在する', () => {
+  A.Q_PAIR.forEach(([p], i) => p.forEach(k => ok(A.TRAITS[k], `${i}問目に未知の持ち味 ${k}`)));
+});
+t('進みグセの選択肢は5種すべてを含む', () => {
+  A.Q_STYLE_PICK.forEach((q, i) => {
+    eq(q.opts.length, 5, `${i}問目`);
+    q.opts.forEach(([c]) => ok(A.STYLES[c], `未知のグセ ${c}`));
+  });
+});
+t('必須10問だけで結果が出る（道・持ち味・グセすべて）', () => {
+  const a = {}; A.Q_PAIR.slice(0,6).forEach((_, i) => a['p'+i] = 1 + (i % 4)); a['y0'] = 'choice';
   const r = A.scoreAll(a);
   ok(A.TYPES[r.type], '道が出ない');
   eq(Object.keys(r.traits).length, 12); eq(Object.keys(r.styles).length, 5);
+  eq(Object.entries(r.styles).sort((x,y)=>y[1]-x[1])[0][0], 'choice', '選んだグセが最上位になっていない');
   return A.TYPES[r.type].name;
 });
-t('必須だけでも副業マッチングができる', () => {
-  const a = {}; A.QALL(false).forEach((q, i) => a[q.k] = 1 + (i % 4));
+t('必須10問だけで副業マッチングができる', () => {
+  const a = {}; A.Q_PAIR.slice(0,6).forEach((_, i) => a['p'+i] = 1 + (i % 4)); a['y0'] = 'perfect';
   const m = A.matchJobs(A.scoreAll(a).traits, 3);
   eq(m.length, 3);
   return m.map(x => x.job.name).join(' / ');
 });
-t('追加17問を足しても、同じものさしで比べられる', () => {
-  const core = {}; A.QALL(false).forEach(q => core[q.k] = 4);
-  const full = Object.assign({}, core); A.QALL(true).forEach(q => full[q.k] = 4);
-  const a = A.scoreAll(core), b = A.scoreAll(full);
-  eq(a.traits, b.traits, '全部「そう」なら必須だけでも全部でも同じになるはず');
+t('1問で2つの持ち味が同時に決まる（Aが4ならBは1）', () => {
+  const a = { p0: 4, y0: 'perfect' };
+  const r = A.scoreAll(a);
+  const [x, y] = A.Q_PAIR[0][0];
+  eq(r.traits[x], 100); eq(r.traits[y], 0);
+  return `${A.TRAITS[x].name}100% / ${A.TRAITS[y].name}0%`;
 });
-t('追加で答えが割れると中間の値になる', () => {
-  const core = {}; A.QALL(false).forEach(q => core[q.k] = 4);
-  const full = Object.assign({}, core); A.QALL(true).forEach(q => full[q.k] = 1);
-  const b = A.scoreAll(full);
-  ok(Object.values(b.traits).every(v => v > 30 && v < 70), '中間に寄っていない');
-  return `持ち味はすべて ${Math.min(...Object.values(b.traits))}〜${Math.max(...Object.values(b.traits))}%`;
+t('追加8問を足しても、同じものさしで比べられる', () => {
+  const core = { y0: 'perfect' }; A.Q_PAIR.slice(0,6).forEach((_, i) => core['p'+i] = 4);
+  const full = Object.assign({}, core, { y1: 'perfect' });
+  A.Q_PAIR.slice(6).forEach((_, i) => full['p'+(i+6)] = 4);
+  const a = A.scoreAll(core), b = A.scoreAll(full);
+  eq(Object.keys(a.traits).length, Object.keys(b.traits).length);
+  ok(Object.values(b.traits).every(v => v >= 0 && v <= 100));
+});
+t('同じ持ち味で答えが割れると、中間の値になる', () => {
+  /* sokudan は前半 p0 と後半 p6 の両方でA側に出る。
+     片方を「こっち(4)」、もう片方を反対「こっち(1)」にすると平均2.5＝50%になるはず */
+  eq(A.Q_PAIR[0][0][0], 'sokudan'); eq(A.Q_PAIR[6][0][0], 'sokudan');
+  const same = A.scoreAll({ p0: 4, p6: 4, y0: 'perfect' });
+  const split = A.scoreAll({ p0: 4, p6: 1, y0: 'perfect' });
+  eq(same.traits.sokudan, 100, '一致したのに100%になっていない');
+  eq(split.traits.sokudan, 50, '割れたのに中間になっていない');
+  return `一致${same.traits.sokudan}% / 割れ${split.traits.sokudan}%`;
+});
+t('追加すると、持ち味の値が細かくなる', () => {
+  const core = { y0: 'perfect' }; A.Q_PAIR.slice(0,6).forEach((_, i) => core['p'+i] = 1 + (i % 4));
+  const full = Object.assign({}, core, { y1: 'choice' });
+  A.Q_PAIR.slice(6).forEach((_, i) => full['p'+(i+6)] = 1 + ((i + 2) % 4));
+  const a = new Set(Object.values(A.scoreAll(core).traits));
+  const b = new Set(Object.values(A.scoreAll(full).traits));
+  ok(b.size >= a.size, `段階が増えていない（${a.size}→${b.size}）`);
+  return `値の種類 ${a.size} → ${b.size}`;
 });
 t('道が変わっても、終わったやることは引き継がれる', () => {
   const s1 = A.buildSteps('content');
-  s1[0].items[0].done = true;                       // 全タイプ共通の1つ目
+  s1[0].items[0].done = true;
   const s2 = A.carrySteps(s1, 'teach');
   eq(s2.reduce((n,c)=>n+c.items.length,0), 9);
   ok(s2[0].items[0].done, '共通のやることが引き継がれていない');
 });
 t('保存データの答えと段階が復元される', () => {
-  const a = {}; A.QALL(false).forEach(q => a[q.k] = 3);
+  const a = { p0:4, p1:2, y0:'choice' };
   const c = A.cleanProfile({ name:'x', answers:a, depth:'core',
     result:{type:'content',traits:{},styles:{}} });
-  eq(Object.keys(c.answers).length, 17); eq(c.depth, 'core');
+  eq(c.answers, a); eq(c.depth, 'core');
 });
 t('壊れた答えは捨てられる', () => {
-  const c = A.cleanProfile({ name:'x', answers:{ t0:9, t2:'abc', t4:3, zzz:2 }, depth:'変な値' });
-  eq(c.answers, { t4:3 }); eq(c.depth, 'core');
+  const c = A.cleanProfile({ name:'x',
+    answers:{ p0:9, p1:'abc', p2:3, y0:'存在しないグセ', y1:'alone', zzz:2 }, depth:'変な値' });
+  eq(c.answers, { p2:3, y1:'alone' }); eq(c.depth, 'core');
 });
-
 
 /* ================= 12. 触りはじめの導線 ================= */
 group('12. こたえる前の画面（行き止まりを作らない）');
@@ -483,7 +538,7 @@ t('こたえる前のタブは2つだけ', () => {
   return 'ホーム・しごと';
 });
 t('こたえたあとはタブが5つになる', () => {
-  const p = A.P(); p.result = quiz(fill(24,3));
+  const p = A.P(); p.result = quiz(fill(6,3));
   const n = tabCount(); p.result = null;
   eq(n, 5, 'こたえたのにタブが増えていない');
 });
@@ -508,6 +563,24 @@ t('こたえる前のどの画面からも、次に進む手がある', () => {
     ok(/data-nav="gate"|data-nav="jobs"/.test(h), `${name} に進む手がない`);
   });
 });
+t('画面に出る文言に、古い問題数が残っていない', () => {
+  /* 問題数を変えたときの直し漏れを機械的に見つける。
+     コメントは対象外にし、実際に画面へ出る文字列だけを見る */
+  const strings = [];
+  Object.values(A.GATES).forEach(g => strings.push(g.title, g.lead, g.body, g.cta));
+  Object.values(A.VOICE).forEach(v => strings.push(...[].concat(v)));
+  A.PROMPTS.forEach(p => strings.push(p.name, p.desc));
+  A.OTHER_WAYS.forEach(w => strings.push(w.title, w.body, w.step));
+  const html = read('index.html').match(/content="([^"]*)"/g) || [];
+  const txt = strings.join(' ') + ' ' + html.join(' ');
+
+  const okNums = [A.CORE_COUNT, A.EXTRA_COUNT, A.GATE_CORE, A.CORE_COUNT - A.GATE_CORE];
+  const found = [...new Set([...txt.matchAll(/(\d+)\s*問/g)].map(m => +m[1]))];
+  const bad = found.filter(n => !okNums.includes(n));
+  ok(bad.length === 0, `画面に出る文言と実際の問題数が食い違っている: ${bad.join(',')}問`);
+  return found.length ? `${found.join('・')}問` : '記載なし';
+});
+
 t('こたえる前の画面に、問題数と所要時間が書いてある', () => {
   const h = A.vHome(fresh()) + A.vJobs(fresh()) + A.vClues(fresh());
   ok(h.includes(String(A.CORE_COUNT)), '問題数が書かれていない');

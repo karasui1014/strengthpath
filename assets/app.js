@@ -70,8 +70,8 @@ function cleanProfile(raw) {
   }
   if (raw.answers && typeof raw.answers === 'object') {
     const ok = {};
-    Q_TRAIT.forEach((_, i) => { const v = num(raw.answers['t' + i], 1, 4, null); if (v) ok['t' + i] = v; });
-    Q_STYLE.forEach((_, i) => { const v = num(raw.answers['s' + i], 1, 4, null); if (v) ok['s' + i] = v; });
+    Q_PAIR.forEach((_, i) => { const v = num(raw.answers['p' + i], 1, 4, null); if (v) ok['p' + i] = v; });
+    Q_STYLE_PICK.forEach((_, i) => { const v = raw.answers['y' + i]; if (STYLES[v]) ok['y' + i] = v; });
     if (Object.keys(ok).length) p.answers = ok;
   }
   p.depth = pick1(raw.depth, ['core', 'full'], p.answers ? 'core' : null);
@@ -115,7 +115,7 @@ const isDark = () => S.dark === 'on' ||
   (S.dark === 'auto' && matchMedia('(prefers-color-scheme: dark)').matches);
 
 /* ========== 採点（4段階 → 0〜100%） =====
-   答えた問題の平均で出す。必須21問だけでも、追加17問まで答えても、
+   答えた問題の平均で出す。必須10問だけでも、追加8問まで答えても、
    同じものさしで比べられるようにするため。 */
 function avgBy(list, prefix, ans) {
   const acc = {};
@@ -134,8 +134,24 @@ function toPct(acc, keys) {
   return r;
 }
 function scoreAll(a) {
-  const tp = toPct(avgBy(Q_TRAIT, 't', a), Object.keys(TRAITS));
-  const sp = toPct(avgBy(Q_STYLE, 's', a), Object.keys(STYLES));
+  /* どっち寄りの回答から、両側の持ち味に点をつける。
+     Aを4で選べばBは1。つまり1問で2種ぶんの答えになる。 */
+  const acc = {};
+  Q_PAIR.forEach(([pair], i) => {
+    const v = a['p' + i];
+    if (typeof v !== 'number') return;
+    const put = (k, val) => { acc[k] = acc[k] || { s: 0, n: 0 }; acc[k].s += val; acc[k].n++; };
+    put(pair[0], v); put(pair[1], 5 - v);
+  });
+  const tp = toPct(acc, Object.keys(TRAITS));
+
+  /* 進みグセは「選ばれた回数」。使うのはいちばん近い1つだけ */
+  const hit = {};
+  Q_STYLE_PICK.forEach((q, i) => { const c = a['y' + i]; if (c && STYLES[c]) hit[c] = (hit[c] || 0) + 1; });
+  const max = Math.max(1, ...Object.values(hit));
+  const sp = {};
+  Object.keys(STYLES).forEach(k => { sp[k] = Math.round((hit[k] || 0) / max * 100); });
+
   /* 絶対値で比べると「全部そう」と答えた人が毎回同じ道になってしまうので、
      本人の平均からの差（＝その人の中での相対的な高さ）で判定する */
   const vals = Object.values(tp);
@@ -286,7 +302,7 @@ function vWelcome() {
       <h1>集めるのが好きなあなたへ。<br><b>もう、材料はそろっています。</b></h1>
       <p>本もセミナーも、集めてきたものは全部むだになりません。
       あとは<b>どこから手をつけるか</b>だけ。
-      まず<b>いまの状況を4問</b>だけ聞いて、そのうえで持ち味を見ていきます。</p>
+      まず<b>いまの状況を${GATE_CORE}問</b>だけ聞いて、そのうえで持ち味を見ていきます。</p>
       <button class="btn xl" data-nav="gate">はじめる</button>
       <button class="btn link" data-nav="jobs">こたえずに、副業20コだけ見てみる</button>
       <ul class="easy">
@@ -298,49 +314,77 @@ function vWelcome() {
 }
 
 /* ========== しつもん ==========
-   必須は各項目の1問目だけ（偶数番目）。これで21問。
-   2問目（奇数番目）は「もっと正確にする」を選んだ人にだけ聞く。
-   途中でやめる人のほうが多い前提なので、先に結果が出ることを優先している。 */
-const idxOf = (arr, extra) => arr.map((_, i) => i).filter(i => (i % 2 === 1) === !!extra);
-const QALL = (extra) => [
-  ...idxOf(Q_TRAIT, extra).map(i => ({ k: 't' + i, t: Q_TRAIT[i][1] })),
-  ...idxOf(Q_STYLE, extra).map(i => ({ k: 's' + i, t: Q_STYLE[i][1] }))
-];
-const CORE_COUNT = QALL(false).length + Q_GATE.length;   // 21
-const EXTRA_COUNT = QALL(true).length;                    // 17
+   必須10問（適性3 + どっち寄り6 + 進みグセ1）で結果が出る。
+   追加8問は「もっと正確にする」を選んだ人だけ。 */
+const QALL = (extra) => {
+  const half = Q_PAIR.length / 2;
+  const pr = extra ? Q_PAIR.slice(half).map((_, i) => i + half) : Q_PAIR.map((_, i) => i).slice(0, half);
+  const st = extra ? [1] : [0];
+  return [
+    ...pr.map(i => ({ type: 'pair', k: 'p' + i, q: Q_PAIR[i] })),
+    ...st.filter(i => Q_STYLE_PICK[i]).map(i => ({ type: 'pick', k: 'y' + i, q: Q_STYLE_PICK[i] }))
+  ];
+};
+const gateList = (extra) => (extra ? Q_GATE.slice(GATE_CORE).map((_, i) => i + GATE_CORE)
+                                   : Q_GATE.map((_, i) => i).slice(0, GATE_CORE));
+const CORE_COUNT = QALL(false).length + GATE_CORE;      // 10
+const EXTRA_COUNT = QALL(true).length + (Q_GATE.length - GATE_CORE);  // 8
 
 function vQuiz(p) {
   if (!p.quiz) p.quiz = { i: 0, a: {}, extra: false };
   const extra = !!p.quiz.extra;
-  const qs = QALL(extra), q = qs[p.quiz.i];
+  const qs = QALL(extra), item = qs[p.quiz.i];
   if (p.quiz.i >= qs.length) {
     p.answers = Object.assign({}, p.answers || {}, p.quiz.a);
     const before = p.result && p.result.type;
     p.result = scoreAll(p.answers);
     p.depth = extra ? 'full' : 'core';
-    /* 道が変わらなければ、進めてきたやることはそのまま。
-       変わったときだけ作り直し、終わったものは文言で引き継ぐ。 */
     if (!p.steps || before !== p.result.type) p.steps = carrySteps(p.steps, p.result.type);
     p.quiz = null; save();
     setTimeout(() => go('clues'), 420);
     return `<div class="welcome">${akariTag('happy', 128)}<div class="hi">${esc(extra ? '……はっきりしました。' : VOICE.quizEnd)}</div></div>`;
   }
-  const left = qs.length - p.quiz.i;
+  /* 適性チェックのぶんを足して、通しの進み具合として見せる */
+  const done = (extra ? 0 : GATE_CORE) + p.quiz.i;
+  const total = extra ? EXTRA_COUNT : CORE_COUNT;
+  const left = total - done;
+
+  const body = item.type === 'pair' ? pairBody(item) : pickBody(item);
   return `<div class="quiz">
       <div class="qtop">
-        <div class="bar"><i style="width:${p.quiz.i / qs.length * 100}%"></i></div>
+        <div class="bar"><i style="width:${done / total * 100}%"></i></div>
         <span class="mini">あと${left}問</span>
       </div>
-      ${p.quiz.i === 0 ? say(VOICE.quizStart, 'normal', 48)
-        : (p.quiz.i % 8 === 0 ? say(pick(VOICE.quizMid), 'think', 48) : '')}
-      <h2 class="qtext">${esc(q.t)}</h2>
-      <div class="scale">
-        ${SCALE.map(s => `<button class="sc" data-ans="${s.v}">${esc(s.label)}</button>`).join('')}
-      </div>
+      ${p.quiz.i === 0 ? say(extra ? 'もう少しだけ。同じことを、別の言い方で聞きます。' : VOICE.quizStart, 'normal', 48) : ''}
+      ${body}
       <div class="qfoot">
         ${p.quiz.i > 0 ? '<button class="btn link" data-back="1">← ひとつ戻る</button>' : '<span></span>'}
         <button class="btn link" data-pause="1">今日はここまで</button>
       </div>
+    </div>`;
+}
+
+/* どっち寄り？ 上下に2つ並べ、真ん中の4段階で選ぶ */
+function pairBody(item) {
+  const [, ta, tb] = item.q;
+  return `<h2 class="qtext pairq">どっちが自分に近いですか</h2>
+    <div class="pair">
+      <div class="pside"><span class="plabel">A</span>${esc(ta)}</div>
+      <div class="pchoices">
+        ${PAIR_SCALE.map(s => `<button class="pc pc-${s.side}" data-pair="${s.v}">
+          <span class="pcm">${esc(s.label)}</span><span class="pcs">${s.side === 'a' ? 'A' : 'B'}</span>
+        </button>`).join('')}
+      </div>
+      <div class="pside"><span class="plabel">B</span>${esc(tb)}</div>
+    </div>`;
+}
+
+/* 5つから近いものを1つ選ぶ */
+function pickBody(item) {
+  return `<h2 class="qtext">${esc(item.q.ask)}</h2>
+    <div class="scale">
+      ${item.q.opts.map(([code, label]) =>
+        `<button class="sc" data-pick="${code}">${esc(label)}</button>`).join('')}
     </div>`;
 }
 
@@ -399,24 +443,25 @@ function vClues(p) {
 }
 const notyet = (what) => `<div class="welcome">${akariTag('normal', 110)}
     <div class="hi">${esc(what || 'ここには、あなたに合わせた内容が出ます。')}</div>
-    <button class="btn xl" data-nav="gate">${CORE_COUNT}問こたえる（2分）</button>
+    <button class="btn xl" data-nav="gate">${CORE_COUNT}問こたえる（1分）</button>
     <button class="btn link" data-nav="jobs">先に、副業だけ見てみる</button></div>`;
 
 
-/* ========== 適性チェック（8問） ========== */
+/* ========== 適性チェック ========== */
 function vGate(p) {
   if (!p.gateQuiz) p.gateQuiz = { i: 0, a: {} };
-  const q = Q_GATE[p.gateQuiz.i];
-  if (p.gateQuiz.i >= Q_GATE.length) {
+  const list = gateList(false);
+  const q = Q_GATE[list[p.gateQuiz.i]];
+  if (p.gateQuiz.i >= list.length) {
     p.gate = scoreGate(p.gateQuiz.a);
     p.gateQuiz = null; save();
     setTimeout(() => go('gateResult'), 380);
     return `<div class="welcome">${akariTag('think', 120)}<div class="hi">……なるほど。</div></div>`;
   }
-  const left = Q_GATE.length - p.gateQuiz.i;
+  const left = CORE_COUNT - p.gateQuiz.i;
   return `<div class="quiz">
       <div class="qtop">
-        <div class="bar"><i style="width:${p.gateQuiz.i / Q_GATE.length * 100}%"></i></div>
+        <div class="bar"><i style="width:${p.gateQuiz.i / CORE_COUNT * 100}%"></i></div>
         <span class="mini">あと${left}問</span>
       </div>
       ${p.gateQuiz.i === 0 ? say('まず、いまの状況だけ教えてください。正直なところで大丈夫です。', 'normal', 48) : ''}
@@ -492,7 +537,7 @@ function vJobs(p) {
     ${p.result ? '' : `<div class="soft nudge">
       <p>${CORE_COUNT}問こたえると、<b>この20コがあなたに近い順に並びかえられます。</b>
       合う3つには印がつきます。</p>
-      <button class="btn ghost" data-nav="gate">${CORE_COUNT}問こたえる（2分）</button>
+      <button class="btn ghost" data-nav="gate">${CORE_COUNT}問こたえる（1分）</button>
     </div>`}
     <div class="cats">
       <button class="cat${jobCat === 'all' ? ' on' : ''}" data-jcat="all">ぜんぶ</button>
@@ -760,7 +805,7 @@ function bind(p) {
   on('[data-nav]', 'click', e => go(e.currentTarget.dataset.nav));
 
   on('[data-gans]', 'click', e => {
-    p.gateQuiz.a['g' + p.gateQuiz.i] = +e.currentTarget.dataset.gans;
+    p.gateQuiz.a['g' + gateList(false)[p.gateQuiz.i]] = +e.currentTarget.dataset.gans;
     p.gateQuiz.i++; save(); render();
   });
   on('[data-gback]', 'click', () => { p.gateQuiz.i = Math.max(0, p.gateQuiz.i - 1); render(); });
@@ -771,10 +816,12 @@ function bind(p) {
   });
   on('[data-ext]', 'click', e => window.open(e.currentTarget.dataset.ext, '_blank', 'noopener'));
 
-  on('[data-ans]', 'click', e => {
-    p.quiz.a[QALL(p.quiz.extra)[p.quiz.i].k] = +e.currentTarget.dataset.ans;
+  const answerQuiz = val => {
+    p.quiz.a[QALL(p.quiz.extra)[p.quiz.i].k] = val;
     p.quiz.i++; save(); render();
-  });
+  };
+  on('[data-pair]', 'click', e => answerQuiz(+e.currentTarget.dataset.pair));
+  on('[data-pick]', 'click', e => answerQuiz(e.currentTarget.dataset.pick));
   on('[data-back]', 'click', () => { p.quiz.i = Math.max(0, p.quiz.i - 1); render(); });
   on('[data-pause]', 'click', () => { save(); go('home'); });
   on('[data-retake]', 'click', () => {
