@@ -25,3 +25,15 @@ cd ~/StrengthPath && python3 tools/bundle.py
 ### 注意
 
 `<meta charset="UTF-8">` は必須です。これが無いと日本語が全部文字化けします（一度やらかしました）。
+
+## review.py — 文言一覧の書き出し（校正用）
+
+```bash
+cd ~/StrengthPath && node -e "…" # データ書き出し（review.py の先頭コメント参照）
+python3 tools/review.py
+```
+
+`dist/review.html` が出ます。アプリに出てくる文章をすべて1枚にまとめたもので、
+画面を触らずに内容だけ確認できます。**文言を直したら作り直せば常に最新**になります。
+
+各テキストには文字数を添えてあるので、長すぎるコピーを見つけやすくしてあります。
