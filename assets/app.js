@@ -1,7 +1,7 @@
-/* 一歩ノート - アプリ本体 */
+/* StrengthPath - アプリ本体 */
 'use strict';
 
-const KEY = 'ippo-note-v1';
+const KEY = 'strengthpath-v1';
 const $  = (s, r) => (r || document).querySelector(s);
 const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c =>
@@ -17,7 +17,7 @@ let S = load();
 
 function blankProfile(name) {
   return { id: uid(), name: name || 'あなた', createdAt: today(),
-    quiz: null, result: null, steps: null, logs: [], sessions: [],
+    gate: null, gateQuiz: null, quiz: null, result: null, steps: null, logs: [], sessions: [],
     goal: { why: '', reward: '', hours: '' } };
 }
 function load() {
@@ -71,6 +71,32 @@ function scoreAll(a) {
 }
 const rank = o => Object.entries(o).sort((x, y) => y[1] - x[1]);
 
+/* ===== 適性チェックの判定 =====
+   気持ち（why + keep）と 余力（time + give）を別々に見る。
+   合計点ひとつで切ると「やる気はあるが時間がない人」を弾いてしまうため。 */
+function scoreGate(a) {
+  const g = {};
+  Q_GATE.forEach(([c], i) => { g[c] = (g[c] || 0) + (a['g' + i] || 2); });
+  const motive = (g.why || 0) + (g.keep || 0);     // 4〜16
+  const room   = (g.time || 0) + (g.give || 0);    // 4〜16
+  let tier = 'other';
+  if (motive >= 11 && room >= 11) tier = 'ready';
+  else if (motive >= 11) tier = 'time';
+  return { motive, room, tier, date: today() };
+}
+
+/* ===== 副業カタログとのマッチング =====
+   持ち味の絶対値ではなく、本人の平均からの差で重みづけする */
+function matchJobs(traits, n) {
+  const vals = Object.values(traits);
+  const mean = vals.reduce((x, y) => x + y, 0) / vals.length;
+  return JOBS.map(j => {
+    let s = 0, tot = 0;
+    for (const k in j.w) { s += ((traits[k] || 0) - mean) * j.w[k]; tot += j.w[k]; }
+    return { job: j, s: s / tot };
+  }).sort((x, y) => y.s - x.s).slice(0, n || JOBS.length);
+}
+
 /* ========== やること（9つ） ========== */
 function buildSteps(type) {
   const ts = TYPE_STEPS[type] || {};
@@ -97,7 +123,9 @@ function go(v) { view = v; showAll = false; window.scrollTo(0, 0); render(); }
 function render() {
   applyTheme();
   const p = P();
-  const map = { home: vHome, quiz: vQuiz, clues: vClues, book: vBook, buddy: vBuddy, settings: vSettings, people: vPeople };
+  const map = { home: vHome, gate: vGate, gateResult: vGateResult, other: vOther,
+                quiz: vQuiz, clues: vClues, jobs: vJobs, book: vBook,
+                buddy: vBuddy, settings: vSettings, people: vPeople };
   $('#view').innerHTML = (map[view] || vHome)(p);
   $('#nav').innerHTML = navHtml();
   $('#topbar').innerHTML = topHtml(p);
@@ -107,12 +135,13 @@ function render() {
 function topHtml(p) {
   return `<button class="brand" data-nav="home">
       <span class="bmark">${catSVG(30)}</span>
-      <span class="btxt">一歩ノート<em>${S.mode === 'coach' ? esc(p.name) : '持ち味から、次の1つを'}</em></span>
+      <span class="btxt">StrengthPath<em>${S.mode === 'coach' ? esc(p.name) : '持ち味から、次の1つを'}</em></span>
     </button>
     <button class="icobtn" data-nav="settings" aria-label="設定">⚙</button>`;
 }
 function navHtml() {
-  const items = [['home', '🏠', 'ホーム'], ['clues', '✨', 'もちあじ'], ['book', '📓', 'きろく'], ['buddy', '💬', 'そうだん']];
+  const items = [['home', '🏠', 'ホーム'], ['clues', '✨', 'もちあじ'],
+                 ['jobs', '🧰', 'しごと'], ['book', '📓', 'きろく'], ['buddy', '💬', 'そうだん']];
   if (S.mode === 'coach') items.push(['people', '👥', 'みんな']);
   return items.map(([v, i, l]) =>
     `<button class="nav-btn${view === v ? ' on' : ''}" data-nav="${v}"><span>${i}</span>${l}</button>`).join('');
@@ -144,7 +173,7 @@ function vHome(p) {
 
     <div class="grid2">
       <button class="tile" data-nav="clues"><em>${t.emoji}</em><b>${esc(t.name)}</b><span>あなたに向いてる道</span></button>
-      <button class="tile" data-nav="book"><em>📓</em><b>${timesMoved(p)}回</b><span>これまで動いた回数</span></button>
+      <button class="tile" data-nav="jobs"><em>🧰</em><b>${esc(matchJobs(p.result.traits, 1)[0].job.name)}</b><span>相性のいい副業</span></button>
     </div>
     <div class="soft">
       <div class="mini">${style.emoji} ${esc(style.name)}のあなたへ</div>
@@ -158,8 +187,9 @@ function vWelcome() {
       <div class="hi">${esc(VOICE.greetFirst)}</div>
       <h1>集めるのが好きなあなたへ。<br><b>もう、材料はそろっています。</b></h1>
       <p>本もセミナーも、集めてきたものは全部むだになりません。
-      あとは<b>どこから手をつけるか</b>だけ。34問、ぜんぶで3分です。</p>
-      <button class="btn xl" data-nav="quiz">はじめる</button>
+      あとは<b>どこから手をつけるか</b>だけ。
+      まず<b>いまの状況を8問</b>だけ聞いて、そのうえで持ち味を見ていきます。</p>
+      <button class="btn xl" data-nav="gate">はじめる</button>
       <ul class="easy">
         <li>1問3秒。指1本でOK</li>
         <li>途中でやめても、続きから始められます</li>
@@ -238,12 +268,133 @@ function vClues(p) {
       <div class="rx"><b>ラクに進むコツ</b>${esc(style.tip)}</div>
     </div>
 
+    <h3 class="sec">あなたに近い副業</h3>
+    ${matchJobs(r.traits, 3).map(({ job }) => `<button class="jobmini" data-nav="jobs">
+      <span class="jc">${JOB_CATS[job.cat].emoji}</span>
+      <span class="jn"><b>${esc(job.name)}</b><em>${esc(job.what)}</em></span></button>`).join('')}
+    <button class="btn ghost wide" data-nav="jobs">20コぜんぶ見る</button>
+
     <button class="btn xl" data-nav="book">やることを見る</button>
-    <button class="btn link wide" data-retake="1">もう一度やってみる</button>`;
+    <button class="btn link wide" data-retake="1">もう一度やってみる</button>
+    <button class="btn link wide" data-regate="1">いまの状況を聞き直す</button>`;
 }
 const notyet = () => `<div class="welcome">${akariTag('think', 110)}
     <div class="hi">まだ、はじめていませんね。</div>
-    <button class="btn xl" data-nav="quiz">3分ではじめる</button></div>`;
+    <button class="btn xl" data-nav="gate">3分ではじめる</button></div>`;
+
+
+/* ========== 適性チェック（8問） ========== */
+function vGate(p) {
+  if (!p.gateQuiz) p.gateQuiz = { i: 0, a: {} };
+  const q = Q_GATE[p.gateQuiz.i];
+  if (p.gateQuiz.i >= Q_GATE.length) {
+    p.gate = scoreGate(p.gateQuiz.a);
+    p.gateQuiz = null; save();
+    setTimeout(() => go('gateResult'), 380);
+    return `<div class="welcome">${akariTag('think', 120)}<div class="hi">……なるほど。</div></div>`;
+  }
+  const left = Q_GATE.length - p.gateQuiz.i;
+  return `<div class="quiz">
+      <div class="qtop">
+        <div class="bar"><i style="width:${p.gateQuiz.i / Q_GATE.length * 100}%"></i></div>
+        <span class="mini">あと${left}問</span>
+      </div>
+      ${p.gateQuiz.i === 0 ? say('まず、いまの状況だけ教えてください。正直なところで大丈夫です。', 'normal', 48) : ''}
+      <h2 class="qtext">${esc(q[1])}</h2>
+      <div class="scale">
+        ${SCALE.map(s => `<button class="sc" data-gans="${s.v}"><i>${s.emoji}</i>${esc(s.label)}</button>`).join('')}
+      </div>
+      <div class="qfoot">
+        ${p.gateQuiz.i > 0 ? '<button class="btn link" data-gback="1">← ひとつ戻る</button>' : '<span></span>'}
+        <button class="btn link" data-nav="home">今日はここまで</button>
+      </div>
+    </div>`;
+}
+
+/* ========== 適性チェックの結果 ========== */
+function vGateResult(p) {
+  if (!p.gate) return notyet();
+  const g = GATES[p.gate.tier];
+  return `<div class="big-card gate">
+      ${akariTag(g.mood, 96)}
+      <div class="mini">いまの状況</div>
+      <h2>${esc(g.title)}</h2>
+      <p class="catch">${esc(g.lead)}</p>
+      <p>${esc(g.body)}</p>
+      ${g.tips ? `<ul class="tips">${g.tips.map(t => `<li>${esc(t)}</li>`).join('')}</ul>` : ''}
+      <div class="gauge">
+        <div><span>気持ち</span><b class="track"><i style="width:${Math.round((p.gate.motive - 4) / 12 * 100)}%"></i></b></div>
+        <div><span>いまの余力</span><b class="track"><i style="width:${Math.round((p.gate.room - 4) / 12 * 100)}%"></i></b></div>
+      </div>
+      ${p.gate.tier === 'other'
+        ? `<button class="btn xl" data-nav="other">時間を使わない方法を見る</button>
+           <button class="btn link" data-nav="quiz">${esc(g.cta)}</button>`
+        : `<button class="btn xl" data-nav="quiz">${esc(g.cta)}</button>
+           <button class="btn link" data-nav="other">先に、時間を使わない方法も見ておく</button>`}
+    </div>`;
+}
+
+/* ========== 副業以外の道 ========== */
+function vOther(p) {
+  return `${say('急がなくて大丈夫です。増やし方は、ひとつではありません。', 'normal')}
+    <div class="big-card">
+      <div class="mini">時間をほとんど使わない方法</div>
+      <h2>いまの生活を削らずに、できること</h2>
+      <p>副業は時間を使います。先にこちらを片づけたほうが、結果が早いことは珍しくありません。</p>
+    </div>
+    ${OTHER_WAYS.map(w => `<div class="soft way-card">
+      <h3><span class="wemoji">${w.emoji}</span>${esc(w.title)}</h3>
+      <p>${esc(w.body)}</p>
+      <div class="rx"><b>今日15分でできること</b>${esc(w.step)}</div>
+    </div>`).join('')}
+    <div class="soft">
+      <div class="mini">くわしく知るなら</div>
+      <p>${esc(LEARN_LINK.note)}</p>
+      <button class="btn ghost" data-ext="${esc(LEARN_LINK.url)}">${esc(LEARN_LINK.label)} を開く</button>
+      <p class="fine">${esc(MONEY_NOTE)}</p>
+    </div>
+    <div class="soft">
+      <p class="dim">気が変わったら、いつでも戻ってきてください。副業のほうも、いつでも見られます。</p>
+      <button class="btn" data-nav="${p.result ? 'clues' : 'quiz'}">${p.result ? 'もちあじを見る' : '持ち味を見てみる'}</button>
+    </div>`;
+}
+
+/* ========== しごと（副業カタログ） ========== */
+let jobCat = 'all', jobOpen = null;
+function vJobs(p) {
+  const matched = p.result ? matchJobs(p.result.traits) : null;
+  const list = (matched ? matched.map(m => m.job) : JOBS)
+    .filter(j => jobCat === 'all' || j.cat === jobCat);
+  const topIds = matched ? matched.slice(0, 3).map(m => m.job.id) : [];
+  return `${p.result
+      ? say('あなたの持ち味に近い順に並べました。上の3つは特に相性がいいです。', 'happy')
+      : say('20コあります。持ち味を調べると、合う順に並びかえられます。', 'normal')}
+    <div class="cats">
+      <button class="cat${jobCat === 'all' ? ' on' : ''}" data-jcat="all">ぜんぶ</button>
+      ${Object.entries(JOB_CATS).map(([k, c]) =>
+        `<button class="cat${jobCat === k ? ' on' : ''}" data-jcat="${k}">${c.emoji} ${esc(c.name)}</button>`).join('')}
+    </div>
+    ${list.map(j => {
+      const open = jobOpen === j.id;
+      const hit = topIds.includes(j.id);
+      return `<div class="job${hit ? ' hit' : ''}${open ? ' open' : ''}">
+        <button class="job-h" data-job="${j.id}">
+          ${hit ? '<span class="badge">相性◎</span>' : ''}
+          <span class="jc">${JOB_CATS[j.cat].emoji}</span>
+          <span class="jn"><b>${esc(j.name)}</b><em>${esc(j.what)}</em></span>
+          <span class="jx">${open ? '−' : '＋'}</span>
+        </button>
+        ${open ? `<div class="job-b">
+          <div class="rx"><b>最初の一歩</b>${esc(j.first)}</div>
+          <p class="jrow"><b>いるもの</b>${esc(j.need)}</p>
+          <p class="jrow"><b>AIの使いどころ</b>${esc(j.ai)}</p>
+          <p class="jrow real"><b>正直なところ</b>${esc(j.real)}</p>
+          <p class="jrow"><b>効く持ち味</b>${Object.keys(j.w).map(k => TRAITS[k].name).join('・')}</p>
+        </div>` : ''}
+      </div>`;
+    }).join('')}
+    <p class="fine">分類の枠組みはリベラルアーツ大学「おすすめの副業19選」を参考にしています。解説文と持ち味との対応づけは本ツールの独自作成です。</p>`;
+}
 
 /* ========== 手帳 ========== */
 function vBook(p) {
@@ -315,6 +466,9 @@ function ctx(p) {
 ・やる理由：${p.goal.why || '未記入'}
 ・ごほうび：${p.goal.reward || '未記入'}
 ・使える時間：${p.goal.hours || '未記入'}
+
+【持ち味に近い副業（上位3つ）】
+${matchJobs(r.traits, 3).map(m => '・' + m.job.name + '：' + m.job.what).join('\n')}
 
 【いま目の前にあること】
 ${ns ? ns.text : '（ぜんぶ完了）'}
@@ -472,6 +626,18 @@ function bind(p) {
 
   on('[data-nav]', 'click', e => go(e.currentTarget.dataset.nav));
 
+  on('[data-gans]', 'click', e => {
+    p.gateQuiz.a['g' + p.gateQuiz.i] = +e.currentTarget.dataset.gans;
+    p.gateQuiz.i++; save(); render();
+  });
+  on('[data-gback]', 'click', () => { p.gateQuiz.i = Math.max(0, p.gateQuiz.i - 1); render(); });
+  on('[data-jcat]', 'click', e => { jobCat = e.currentTarget.dataset.jcat; jobOpen = null; render(); });
+  on('[data-job]', 'click', e => {
+    const id = e.currentTarget.dataset.job;
+    jobOpen = jobOpen === id ? null : id; render();
+  });
+  on('[data-ext]', 'click', e => window.open(e.currentTarget.dataset.ext, '_blank', 'noopener'));
+
   on('[data-ans]', 'click', e => {
     p.quiz.a[QALL()[p.quiz.i].k] = +e.currentTarget.dataset.ans;
     p.quiz.i++; save(); render();
@@ -481,6 +647,10 @@ function bind(p) {
   on('[data-retake]', 'click', () => {
     if (!confirm('もう一度やってみますか？（記録はそのまま残ります）')) return;
     p.quiz = { i: 0, a: {} }; go('quiz');
+  });
+  on('[data-regate]', 'click', () => {
+    if (!confirm('いまの状況を、もう一度聞きますか？')) return;
+    p.gateQuiz = { i: 0, a: {} }; go('gate');
   });
 
   on('[data-fin]', 'click', e => {
@@ -555,7 +725,7 @@ function bind(p) {
   on('[data-export]', 'click', () => {
     const a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob([JSON.stringify(S, null, 2)], { type: 'application/json' }));
-    a.download = `一歩ノート_${today()}.json`; a.click(); URL.revokeObjectURL(a.href);
+    a.download = `StrengthPath_${today()}.json`; a.click(); URL.revokeObjectURL(a.href);
   });
   on('[data-import]', 'click', () => {
     const i = document.createElement('input'); i.type = 'file'; i.accept = 'application/json';

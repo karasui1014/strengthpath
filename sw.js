@@ -1,6 +1,6 @@
-/* 一歩ノート Service Worker
+/* StrengthPath Service Worker
    ⚠️ ファイルを更新したら必ず CACHE のバージョンを上げること */
-const CACHE = 'ippo-note-v1';
+const CACHE = 'strengthpath-v1';
 const ASSETS = ['./','./index.html','./manifest.json',
   './assets/style.css','./assets/data.js','./assets/akari.js','./assets/app.js',
   './assets/akari/normal.png','./assets/akari/think.png','./assets/akari/surprised.png',
