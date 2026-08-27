@@ -54,10 +54,11 @@ S2 = sec('other', '②', '副業以外の道',
 half = len(D['Q_PAIR']) // 2
 def pair_rows(items, base):
     out = '<ol class="qs pairs" start="%d">' % (base + 1)
-    for (pair, ta, tb) in items:
-        out += ('<li><span class="pa">%s</span><span class="pv">か</span><span class="pb">%s</span>'
+    for q in items:
+        opts = ''.join('<li>%s</li>' % e(x) for x in q['opts'])
+        out += ('<li><ul class="popts">%s</ul>'
                 '<span class="pw">%s ↔ %s</span></li>') % (
-            e(ta), e(tb), e(D['TRAITS'][pair[0]]['name']), e(D['TRAITS'][pair[1]]['name']))
+            opts, e(D['TRAITS'][q['pair'][0]]['name']), e(D['TRAITS'][q['pair'][1]]['name']))
     return out + '</ol>'
 picks = ''
 for i, q in enumerate(D['Q_STYLE_PICK']):
@@ -67,13 +68,12 @@ for i, q in enumerate(D['Q_STYLE_PICK']):
         e(D['STYLES'][c]['name']), e(t)) for c, t in q['opts'])
     picks += '</ul>'
 S3 = sec('quiz', '③', '設問（必須10問）',
-    '<b>1問で2つの持ち味を同時に測ります。</b>「まず試してみる／まず調べてみる」のように、'
-    'どちらを選んでも否定にならない対で聞くので、12種を6問で測れます。'
-    'Aを「こっち」で選べばBは反対の値になり、1タップが2種ぶんの答えになります。',
+    '<b>1問で2つの持ち味を同時に測ります。</b>選択肢そのものを完結した文にしているので、'
+    'A・Bのラベルを覚え直す必要がありません。どちらを選んでも否定にならない対にしてあります。'
+    '上を選べば下は反対の値になるので、1タップが2種ぶんの答えになります。',
     '<h3 class="sub">どっち寄り？　前半6問<span class="goal">必須。12種すべてが1回ずつ出る</span></h3>'
     + pair_rows(D['Q_PAIR'][:half], 0)
-    + '<p class="scale">選び方：' + ' ／ '.join(e(x['label']) + '(' + x['side'].upper() + ')' for x in D['PAIR_SCALE']) + '</p>'
-    + '<h3 class="sub">どっち寄り？　後半6問<span class="goal">追加。同じ12種を別の組み合わせで</span></h3>'
+        + '<h3 class="sub">どっち寄り？　後半6問<span class="goal">追加。同じ12種を別の組み合わせで</span></h3>'
     + pair_rows(D['Q_PAIR'][half:], half)
     + '<h3 class="sub">進みグセ<span class="goal">5つから1つ選ぶだけ</span></h3>' + picks)
 
@@ -309,6 +309,16 @@ ul.picks li{{background:var(--card);padding:11px 15px;font-size:14px}}
   padding:12px 14px;margin:11px 0}}
 .yen-h{{font-size:10.5px;font-weight:800;letter-spacing:.1em;color:var(--acc);margin-bottom:6px}}
 .yen dl.rows dt{{color:var(--acc2)}}
+
+/* どっち寄りは「1問＝4つの選択肢」なので、外側の番号を選択肢に重ねない */
+ol.qs.pairs > li{{padding:14px 15px 12px 46px}}
+ol.qs.pairs > li::before{{top:16px}}
+/* 外側の ol.qs が付ける番号を、内側の選択肢に出さない */
+ul.popts{{list-style:none;display:grid;gap:4px;counter-reset:none}}
+ul.popts li::before{{content:none !important}}
+ul.popts li{{background:var(--quiet);border-radius:7px;padding:7px 11px;font-size:13.5px}}
+ul.popts li:first-child,ul.popts li:last-child{{font-weight:700;background:var(--card);
+  border:1px solid var(--line)}}
 @media print{{ nav.toc{{display:none}} .wrap{{grid-template-columns:1fr}} section{{break-inside:avoid}} }}
 </style>
 
