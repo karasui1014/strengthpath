@@ -25,7 +25,7 @@ vm.runInContext(FILES.map(read).join('\n') + `
   flat, nextStep, doneCount, totalCount, timesMoved, ymd, today, cleanStore, cleanProfile,
   QALL, CORE_COUNT, EXTRA_COUNT, carrySteps, navHtml, vHome, vClues, vJobs, vBook, vBuddy, P,
   TRAITS, STYLES, TYPES, JOBS, JOB_CATS, GATES, CHAPTERS, PROMPTS, THEMES, VOICE,
-  Q_GATE, GATE_CORE, Q_PAIR, Q_STYLE_PICK, PAIR_SCALE, SCALE, OTHER_WAYS, COMMON_STEPS, TYPE_STEPS, LEARN_LINK, MONEY_NOTE };`,
+  Q_GATE, GATE_CORE, Q_PAIR, Q_STYLE_PICK, PAIR_SCALE, SCALE, OTHER_WAYS, COMMON_STEPS, TYPE_STEPS, LEARN_LINK, MONEY_NOTE, YEN_NOTE };`,
   ctx, { filename:'bundle.js' });
 const A = ctx.API;
 
@@ -585,6 +585,63 @@ t('こたえる前の画面に、問題数と所要時間が書いてある', ()
   const h = A.vHome(fresh()) + A.vJobs(fresh()) + A.vClues(fresh());
   ok(h.includes(String(A.CORE_COUNT)), '問題数が書かれていない');
   ok(h.includes('2分') || h.includes('3秒'), '所要時間の目安がない');
+});
+
+
+/* ================= 13. お金の具体性 ================= */
+group('13. お金のこと（20コすべてに具体的な数字があるか）');
+t('全20コに5項目そろっている', () => {
+  const need = ['where', 'unit', 'firstYen', 'to5', 'cost'];
+  A.JOBS.forEach(j => need.forEach(k =>
+    ok(j[k] && String(j[k]).length >= 4, `${j.name} の ${k} が空か短すぎる`)));
+  return '売る場所 / いくらになる / 最初の1円まで / 月5万円 / 費用';
+});
+t('「いくらになる」に必ず金額が書いてある', () => {
+  A.JOBS.forEach(j => ok(/[0-9０-９]/.test(j.unit) && /円|%/.test(j.unit),
+    `${j.name}: 数字が入っていない → ${j.unit}`));
+});
+t('「最初の1円まで」に期間が書いてある', () => {
+  A.JOBS.forEach(j => ok(/日|週間|ヶ月|年/.test(j.firstYen),
+    `${j.name}: 期間が書かれていない → ${j.firstYen}`));
+});
+t('「月5万円にするなら」に必要な量が書いてある', () => {
+  A.JOBS.forEach(j => ok(/[0-9０-９]/.test(j.to5), `${j.name}: 数字がない`));
+});
+t('「はじめる費用」に金額が書いてある', () => {
+  A.JOBS.forEach(j => ok(/円/.test(j.cost), `${j.name}: 費用が書かれていない`));
+});
+t('「売る場所」に実在のサービス名が入っている', () => {
+  A.JOBS.forEach(j => ok(j.where.length > 4 && !/など$/.test(j.where.trim()),
+    `${j.name}: 具体名がない → ${j.where}`));
+  return A.JOBS[0].where;
+});
+t('収入を断定・保証する書き方をしていない', () => {
+  const NG = ['稼げます', '確実に', '必ず', '誰でも', '簡単に稼', '保証', '楽して'];
+  A.JOBS.forEach(j => {
+    const txt = [j.unit, j.firstYen, j.to5, j.cost, j.real].join(' ');
+    NG.forEach(w => ok(!txt.includes(w), `${j.name} に「${w}」が入っている`));
+  });
+});
+t('金額が目安である旨の注記がある', () => {
+  ok(A.YEN_NOTE.includes('目安') && A.YEN_NOTE.includes('保証するものではありません'),
+    '注記が不十分');
+  return A.YEN_NOTE.slice(0, 24) + '…';
+});
+t('元手が要るものは、そのことが費用に書いてある', () => {
+  [['sedori', '仕入'], ['handmade', '材料'], ['d2c', '在庫'], ['fudosan', '頭金']]
+    .forEach(([id, word]) => {
+      const j = A.JOBS.find(x => x.id === id);
+      ok(j.cost.includes(word), `${j.name} の費用に「${word}」が書かれていない`);
+    });
+});
+t('元手ゼロで始められるものは、費用の冒頭が0円になっている', () => {
+  /* 「初期在庫10〜50万円。ショップ開設はBASEなら0円」のような文中の0円を
+     元手ゼロと誤って読まないよう、書き出しだけを見る */
+  const zero = A.JOBS.filter(j => j.cost.startsWith('0円'));
+  ok(zero.length >= 8, `0円ではじめられるものが少なすぎる（${zero.length}件）`);
+  ok(!zero.some(j => ['sedori', 'handmade', 'd2c', 'fudosan'].includes(j.id)),
+    '元手が要るものが0円扱いになっている');
+  return `${zero.length}件が元手0円`;
 });
 
 /* ================= 結果 ================= */

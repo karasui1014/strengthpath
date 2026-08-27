@@ -556,6 +556,18 @@ function vJobs(p) {
         </button>
         ${open ? `<div class="job-b">
           <div class="rx"><b>最初の一歩</b>${esc(j.first)}</div>
+
+          <div class="yen">
+            <div class="yen-h">お金のこと</div>
+            <dl>
+              <dt>いくらになる</dt><dd>${esc(j.unit)}</dd>
+              <dt>最初の1円まで</dt><dd>${esc(j.firstYen)}</dd>
+              <dt>月5万円にするなら</dt><dd>${esc(j.to5)}</dd>
+              <dt>はじめる費用</dt><dd>${esc(j.cost)}</dd>
+              <dt>売る場所</dt><dd>${esc(j.where)}</dd>
+            </dl>
+          </div>
+
           <p class="jrow"><b>いるもの</b>${esc(j.need)}</p>
           <p class="jrow"><b>AIの使いどころ</b>${esc(j.ai)}</p>
           <p class="jrow real"><b>正直なところ</b>${esc(j.real)}</p>
@@ -563,7 +575,8 @@ function vJobs(p) {
         </div>` : ''}
       </div>`;
     }).join('')}
-    <p class="fine">分類の枠組みはリベラルアーツ大学「おすすめの副業19選」を参考にしています。解説文と持ち味との対応づけは本ツールの独自作成です。</p>`;
+    <p class="fine">${esc(YEN_NOTE)}<br>
+    分類の枠組みはリベラルアーツ大学「おすすめの副業19選」を参考にしています。解説文と持ち味との対応づけは本ツールの独自作成です。</p>`;
 }
 
 /* ========== 手帳 ========== */
