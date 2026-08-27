@@ -353,33 +353,6 @@ h1, h2, h3, p, li, summary,
 .nudge p{font-size:14px}
 .nudge .btn{margin-top:4px}
 
-/* ===== どっち寄り？ =====
-   上下に2つ並べ、真ん中の4段階で選ぶ。1タップで2つの持ち味が決まる */
-.pairq{font-size:16px;color:var(--dim);font-weight:700;min-height:0;margin-bottom:16px}
-.pair{display:grid;gap:12px}
-.pside{background:var(--card);border:1px solid var(--line);border-radius:15px;
-  padding:20px 20px 20px 54px;font-size:18px;font-weight:800;line-height:1.6;
-  position:relative;box-shadow:var(--shadow)}
-.plabel{position:absolute;left:18px;top:19px;width:24px;height:24px;border-radius:8px;
-  background:var(--acc);color:#fff;font-size:12px;font-weight:800;
-  display:grid;place-items:center}
-.pchoices{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.pc{background:var(--soft);border:1px solid var(--line);border-radius:12px;
-  padding:13px 10px;font-family:inherit;color:var(--fg);cursor:pointer;
-  display:grid;gap:2px;justify-items:center;transition:border-color .12s,transform .12s}
-.pc:hover{border-color:var(--acc)}
-.pc:active{transform:scale(.97)}
-.pcm{font-size:12px;color:var(--dim);font-weight:700}
-.pcs{font-size:15px;font-weight:800;color:var(--acc)}
-.pc-a .pcs{color:var(--acc)}
-.pc-b .pcs{color:var(--acc2,var(--acc))}
-/* 「こっち」を外側、「どちらかといえば」を内側に並べる */
-.pchoices .pc:nth-child(1){grid-column:1;grid-row:1}
-.pchoices .pc:nth-child(2){grid-column:2;grid-row:1}
-.pchoices .pc:nth-child(3){grid-column:1;grid-row:2}
-.pchoices .pc:nth-child(4){grid-column:2;grid-row:2}
-@media(max-width:400px){ .pside{font-size:16.5px;padding:17px 16px 17px 48px} }
-
 /* ===== お金のこと（副業カタログ） ===== */
 .yen{background:var(--soft);border:1px solid var(--line);border-radius:12px;
   padding:14px 16px;margin:12px 0}

@@ -25,7 +25,7 @@ vm.runInContext(FILES.map(read).join('\n') + `
   flat, nextStep, doneCount, totalCount, timesMoved, ymd, today, cleanStore, cleanProfile,
   QALL, CORE_COUNT, EXTRA_COUNT, carrySteps, navHtml, vHome, vClues, vJobs, vBook, vBuddy, P,
   TRAITS, STYLES, TYPES, JOBS, JOB_CATS, GATES, CHAPTERS, PROMPTS, THEMES, VOICE,
-  Q_GATE, GATE_CORE, Q_PAIR, Q_STYLE_PICK, PAIR_SCALE, SCALE, OTHER_WAYS, COMMON_STEPS, TYPE_STEPS, LEARN_LINK, MONEY_NOTE, YEN_NOTE };`,
+  Q_GATE, GATE_CORE, Q_PAIR, Q_STYLE_PICK, pairOptions, SCALE, OTHER_WAYS, COMMON_STEPS, TYPE_STEPS, LEARN_LINK, MONEY_NOTE, YEN_NOTE };`,
   ctx, { filename:'bundle.js' });
 const A = ctx.API;
 
@@ -105,7 +105,36 @@ t('どっち寄りは12問（前半6が必須・後半6が追加）', () => {
   eq(A.Q_PAIR.length, 12);
   return `必須6 + 追加6`;
 });
-t('どっち寄りの選択肢は4段階', () => { eq(A.PAIR_SCALE.length, 4); eq(A.PAIR_SCALE.map(x=>x.v), [4,3,2,1]); });
+t('選択肢は4つで、値は4→1の順', () => {
+  A.Q_PAIR.forEach((q, i) => {
+    const o = A.pairOptions(q);
+    eq(o.length, 4, `${i}問目`);
+    eq(o.map(x => x.v), [4,3,2,1], `${i}問目`);
+  });
+});
+t('選択肢は、読むだけで意味が通る文になっている', () => {
+  A.Q_PAIR.forEach((q, i) => {
+    A.pairOptions(q).forEach(o => {
+      ok(o.label.length >= 5, `${i}問目に短すぎる選択肢: ${o.label}`);
+      ok(!/^[AB]$|^こっち$|^どちらかといえば$/.test(o.label),
+        `${i}問目に、それだけでは意味が分からない選択肢: ${o.label}`);
+    });
+  });
+  return A.pairOptions(A.Q_PAIR[0]).map(o => o.label).join(' / ');
+});
+t('4つの選択肢がすべて違う文になっている', () => {
+  A.Q_PAIR.forEach((q, i) => {
+    const labels = A.pairOptions(q).map(o => o.label);
+    eq(new Set(labels).size, 4, `${i}問目に同じ文がある`);
+  });
+});
+t('設問データに短い言い方が入っている', () => {
+  A.Q_PAIR.forEach((q, i) => {
+    eq(q.length, 5, `${i}問目の項目数`);
+    [1,2,3,4].forEach(k => ok(q[k] && q[k].length >= 3, `${i}問目の${k}番目が空`));
+    ok(q[2].length <= q[1].length + 4, `${i}問目: 短い言い方が短くない（${q[2]}）`);
+  });
+});
 t('片側にすべて寄せると、その持ち味が100%・反対側が0%になる', () => {
   const a = {}; A.Q_PAIR.slice(0,6).forEach((_, i) => a['p'+i] = 4); a['y0']='perfect';
   const r = A.scoreAll(a);

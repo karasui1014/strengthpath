@@ -364,18 +364,13 @@ function vQuiz(p) {
     </div>`;
 }
 
-/* どっち寄り？ 上下に2つ並べ、真ん中の4段階で選ぶ */
+/* どっちが近い？ A/Bのラベルを使わず、選択肢そのものを文にして縦に並べる。
+   読んで押すだけで済み、上下どちらの文の話かを覚えておく必要がない。 */
 function pairBody(item) {
-  const [, ta, tb] = item.q;
-  return `<h2 class="qtext pairq">どっちが自分に近いですか</h2>
-    <div class="pair">
-      <div class="pside"><span class="plabel">A</span>${esc(ta)}</div>
-      <div class="pchoices">
-        ${PAIR_SCALE.map(s => `<button class="pc pc-${s.side}" data-pair="${s.v}">
-          <span class="pcm">${esc(s.label)}</span><span class="pcs">${s.side === 'a' ? 'A' : 'B'}</span>
-        </button>`).join('')}
-      </div>
-      <div class="pside"><span class="plabel">B</span>${esc(tb)}</div>
+  return `<h2 class="qtext">近いのは、どっちですか</h2>
+    <div class="scale">
+      ${pairOptions(item.q).map(o =>
+        `<button class="sc" data-pair="${o.v}">${esc(o.label)}</button>`).join('')}
     </div>`;
 }
 
