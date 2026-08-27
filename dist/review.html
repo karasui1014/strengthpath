@@ -126,6 +126,17 @@ footer{grid-column:1/-1;border-top:1px solid var(--line);margin-top:60px;
   padding:26px 0 60px;font-size:12px;color:var(--dim);line-height:1.9}
 a{color:var(--acc2)}
 :focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+
+ol.qs.pairs li{padding:13px 15px}
+.pa,.pb{font-weight:700;font-size:14.5px}
+.pv{color:var(--dim);font-size:12px;margin:0 9px}
+.pw{display:block;font-size:11px;color:var(--dim);margin-top:3px}
+.opt{font-size:10px;color:var(--acc2);font-style:normal;margin-left:8px;
+  border:1px solid var(--line);border-radius:99px;padding:1px 7px}
+.pickq{font-size:14px;font-weight:700;margin:16px 0 8px}
+ul.picks{list-style:none;display:grid;gap:1px;background:var(--line);
+  border:1px solid var(--line);border-radius:10px;overflow:hidden}
+ul.picks li{background:var(--card);padding:11px 15px;font-size:14px}
 @media print{ nav.toc{display:none} .wrap{grid-template-columns:1fr} section{break-inside:avoid} }
 </style>
 
@@ -134,22 +145,22 @@ a{color:var(--acc2)}
   <h1>StrengthPath 文言集</h1>
   <p class="sub">アプリに出てくる文章を、ぜんぶ書き出したものです。画面を触らずに内容だけ確認できます。<code></code></p>
   <div class="meta">
-    <span>必須 21問</span><span>追加 17問</span>
+    <span>必須 10問</span><span>追加 8問</span>
     <span>持ち味 12種</span>
     <span>進みグセ 5種</span><span>道 8種</span>
     <span>副業 20コ</span><span>やること 9つ×8</span>
     <span>AI文章 5種</span>
   </div>
 </header>
-<nav class="toc"><a href="#gate"><span>①</span>適性チェック（4問）</a><a href="#other"><span>②</span>副業以外の道</a><a href="#quiz"><span>③</span>持ち味チェック（必須17問＋追加17問）</a><a href="#traits"><span>④</span>12の持ち味</a><a href="#styles"><span>⑤</span>5つの進みグセ</a><a href="#types"><span>⑥</span>8つの向いてる道</a><a href="#jobs"><span>⑦</span>副業カタログ（20コ）</a><a href="#steps"><span>⑧</span>9つのやること</a><a href="#voice"><span>⑨</span>キャラクターのひとこと</a><a href="#prompts"><span>⑩</span>AIに渡す文章（5種）</a></nav>
+<nav class="toc"><a href="#gate"><span>①</span>適性チェック（必須3問）</a><a href="#other"><span>②</span>副業以外の道</a><a href="#quiz"><span>③</span>設問（必須10問）</a><a href="#traits"><span>④</span>12の持ち味</a><a href="#styles"><span>⑤</span>5つの進みグセ</a><a href="#types"><span>⑥</span>8つの向いてる道</a><a href="#jobs"><span>⑦</span>副業カタログ（20コ）</a><a href="#steps"><span>⑧</span>9つのやること</a><a href="#voice"><span>⑨</span>キャラクターのひとこと</a><a href="#prompts"><span>⑩</span>AIに渡す文章（5種）</a></nav>
 <main>
 <section id="gate">
-<h2><span class="num">①</span>適性チェック（4問）</h2>
-<p class="lead">最初に聞く4問。<b>気持ち</b>（変えたい・続けられる）と<b>余力</b>（時間・手放せる）を別々に測り、3つに分かれます。合計点ひとつで切ると「やる気はあるが時間がない人」を弾いてしまうため、2軸にしています。</p>
+<h2><span class="num">①</span>適性チェック（必須3問）</h2>
+<p class="lead">最初に聞く3問（必須）と、追加1問。<b>気持ち</b>（変えたい・続けられる）と<b>余力</b>（時間・手放せる）を別々に測り、3つに分かれます。合計点ひとつで切ると「やる気はあるが時間がない人」を弾いてしまうため、2軸にしています。</p>
 <ol class="qs"><li><span class="tag t-time">時間</span>本業のあと、平日に1時間くらいPCに向かう時間はつくれそう</li><li><span class="tag t-give">手放す</span>いま楽しんでいることを、ひとつ減らしてもいいと思える</li><li><span class="tag t-why">気持ち</span>今の収入や働き方を、変えたい気持ちがある</li><li><span class="tag t-keep">続ける</span>半年くらい結果が出なくても、続けられそう</li></ol><p class="scale">選択肢：ちがうかも ／ ややちがう ／ ややそう ／ そう！</p><h3 class="sub">判定の3パターン</h3><div class="card gate-ready">
 <h3>いま、はじめどきです</h3>
 <p class="catch">時間も、気持ちも、そろっています。この状態の人はいちばん立ち上がりが速いです。</p>
-<p>このまま持ち味を見ていきましょう。34問、3分で終わります。</p>
+<p>このまま持ち味を見ていきましょう。あと7問で終わります。</p>
 
 <p class="cta">ボタン：持ち味を見る</p></div><div class="card gate-time">
 <h3>気持ちは十分。あとは時間だけ</h3>
@@ -179,9 +190,9 @@ a{color:var(--acc2)}
 <p class="url">https://www.youtube.com/results?search_query=%E3%83%AA%E3%83%99%E3%83%A9%E3%83%AB%E3%82%A2%E3%83%BC%E3%83%84%E5%A4%A7%E5%AD%A6</p>
 <p class="note">※ 本ツールは情報の紹介であり、投資助言や特定の金融商品の推奨ではありません。判断はご自身で行ってください。</p></div>
 </section><section id="quiz">
-<h2><span class="num">③</span>持ち味チェック（必須17問＋追加17問）</h2>
-<p class="lead">各項目とも2問ずつ用意し、<b>1問目だけが必須</b>です（持ち味12＋グセ5＝17問）。2問目は「もっと正確にする」を選んだ人だけが答えます。腰が重い人に42問は重すぎるため、<b>適性4問＋17問＝合計21問で結果が完成する</b>ようにしています。</p>
-<h3 class="sub">持ち味をみる 24問<span class="goal">奇数番号が必須・偶数番号は追加</span></h3><ol class="qs"><li><span class="tag">みきり</span>「やってみようかな」と思ったら、その日のうちに手が動いていることが多い</li><li><span class="tag">みきり</span>迷ったときは、考えるより試したほうが早いと感じる</li><li><span class="tag">やりきり</span>一度やると決めたことは、だいたい最後までやる</li><li><span class="tag">やりきり</span>途中で止まっているものがあると、なんとなく気になる</li><li><span class="tag">わくわく</span>やったことがないことに誘われると、ちょっとワクワクする</li><li><span class="tag">わくわく</span>同じ作業が続くと、そろそろ何か変えたくなる</li><li><span class="tag">みぬき</span>決めるときは、なんとなくより数字や事実を見たい</li><li><span class="tag">みぬき</span>「たぶん良さそう」より「こういう理由で良い」のほうが安心する</li><li><span class="tag">えがき</span>目の前の作業より、段取りを考えるほうが得意だ</li><li><span class="tag">えがき</span>新しい話を聞くと、完成のイメージが浮かびやすい</li><li><span class="tag">しらべ</span>気になったことは、つい調べ込んでしまう</li><li><span class="tag">しらべ</span>広く浅くより、ひとつを深く知るほうが好きだ</li><li><span class="tag">きづき</span>相手の表情や間から、気持ちの変化に気づきやすい</li><li><span class="tag">きづき</span>誰かが困っていると、なんとなく気になってしまう</li><li><span class="tag">つたえ</span>知ったことや感じたことを、誰かに話したくなる</li><li><span class="tag">つたえ</span>説明したり見せたりするのは、そんなに苦じゃない</li><li><span class="tag">ささえ</span>「助かった」と言われると、けっこう嬉しい</li><li><span class="tag">ささえ</span>自分のことより、人の後押しをするほうが力が出る</li><li><span class="tag">ひらめき</span>話しているうちに、アイデアが浮かんでくる</li><li><span class="tag">ひらめき</span>「こうしたら面白いのに」とよく思う</li><li><span class="tag">かたち</span>頭の中にあるものを形にしていく時間が好きだ</li><li><span class="tag">かたち</span>作ったものを人に見せるのは、まあまあ楽しい</li><li><span class="tag">こだわり</span>中身が良くても、見た目が雑だと気になる</li><li><span class="tag">こだわり</span>数より質で選ぶことが多い</li></ol><h3 class="sub">進みグセをみる 10問<span class="goal">奇数番号が必須・偶数番号は追加</span></h3><ol class="qs" start="25"><li><span class="tag t-style">こだわり型</span>ちゃんと整えてから出したい</li><li><span class="tag t-style">こだわり型</span>中途半端なものを見せるのは、あまり好きじゃない</li><li><span class="tag t-style">目移り型</span>やってみたいことが、いくつも思い浮かぶ</li><li><span class="tag t-style">目移り型</span>新しいやり方を知ると、そっちも良さそうに見える</li><li><span class="tag t-style">ていねい型</span>自分より詳しい人のことが、つい頭に浮かぶ</li><li><span class="tag t-style">ていねい型</span>人前に出すときは、失礼がないか気になる</li><li><span class="tag t-style">のんびり型</span>無理に自分を追い立てるのは、あまり好きじゃない</li><li><span class="tag t-style">のんびり型</span>疲れている日は、ちゃんと休むほうを選ぶ</li><li><span class="tag t-style">マイペース型</span>ひとりで進めるほうが集中できる</li><li><span class="tag t-style">マイペース型</span>人に報告する習慣は、いまのところ特にない</li></ol><p class="scale">選択肢：ちがうかも ／ ややちがう ／ ややそう ／ そう！</p>
+<h2><span class="num">③</span>設問（必須10問）</h2>
+<p class="lead"><b>1問で2つの持ち味を同時に測ります。</b>「まず試してみる／まず調べてみる」のように、どちらを選んでも否定にならない対で聞くので、12種を6問で測れます。Aを「こっち」で選べばBは反対の値になり、1タップが2種ぶんの答えになります。</p>
+<h3 class="sub">どっち寄り？　前半6問<span class="goal">必須。12種すべてが1回ずつ出る</span></h3><ol class="qs pairs" start="1"><li><span class="pa">まず試してみる</span><span class="pv">か</span><span class="pb">まず調べてみる</span><span class="pw">みきり ↔ しらべ</span></li><li><span class="pa">決めたことを、最後まで</span><span class="pv">か</span><span class="pb">新しいことを、次々に</span><span class="pw">やりきり ↔ わくわく</span></li><li><span class="pa">数字や事実で決める</span><span class="pv">か</span><span class="pb">相手の気持ちで決める</span><span class="pw">みぬき ↔ きづき</span></li><li><span class="pa">段取りを組み立てる</span><span class="pv">か</span><span class="pb">思いついたことをやる</span><span class="pw">えがき ↔ ひらめき</span></li><li><span class="pa">早く人に伝えたい</span><span class="pv">か</span><span class="pb">納得いくまで整えたい</span><span class="pw">つたえ ↔ こだわり</span></li><li><span class="pa">人の役に立ちたい</span><span class="pv">か</span><span class="pb">自分で作りたい</span><span class="pw">ささえ ↔ かたち</span></li></ol><p class="scale">選び方：こっち(A) ／ どちらかといえば(A) ／ どちらかといえば(B) ／ こっち(B)</p><h3 class="sub">どっち寄り？　後半6問<span class="goal">追加。同じ12種を別の組み合わせで</span></h3><ol class="qs pairs" start="7"><li><span class="pa">動きながら考える</span><span class="pv">か</span><span class="pb">考えてから動く</span><span class="pw">みきり ↔ えがき</span></li><li><span class="pa">ひとつを続ける</span><span class="pv">か</span><span class="pb">アイデアを次々出す</span><span class="pw">やりきり ↔ ひらめき</span></li><li><span class="pa">新しさを取りにいく</span><span class="pv">か</span><span class="pb">質を上げにいく</span><span class="pw">わくわく ↔ こだわり</span></li><li><span class="pa">こまかく分析する</span><span class="pv">か</span><span class="pb">どんどん伝える</span><span class="pw">みぬき ↔ つたえ</span></li><li><span class="pa">ひとつを深く知る</span><span class="pv">か</span><span class="pb">目の前の人を助ける</span><span class="pw">しらべ ↔ ささえ</span></li><li><span class="pa">人をよく見ている</span><span class="pv">か</span><span class="pb">ものをよく作っている</span><span class="pw">きづき ↔ かたち</span></li></ol><h3 class="sub">進みグセ<span class="goal">5つから1つ選ぶだけ</span></h3><h4 class="pickq">何かを始めるとき、自分に近いのはどれですか（必須）</h4><ul class="picks"><li><span class="tag t-style">こだわり型</span>ちゃんと整えてから出したい</li><li><span class="tag t-style">目移り型</span>やってみたいことが、いくつも浮かぶ</li><li><span class="tag t-style">ていねい型</span>自分より詳しい人のことが気になる</li><li><span class="tag t-style">のんびり型</span>無理に自分を追い立てたくない</li><li><span class="tag t-style">マイペース型</span>ひとりで進めるほうが集中できる</li></ul><h4 class="pickq">手が止まるとしたら、どれが近いですか（追加）</h4><ul class="picks"><li><span class="tag t-style">こだわり型</span>中途半端なものを見せたくない</li><li><span class="tag t-style">目移り型</span>新しいやり方を知ると、そっちも良く見える</li><li><span class="tag t-style">ていねい型</span>人前に出すとき、失礼がないか気になる</li><li><span class="tag t-style">のんびり型</span>疲れている日は、休むほうを選ぶ</li><li><span class="tag t-style">マイペース型</span>人に報告する習慣が、いまは無い</li></ul>
 </section><section id="traits">
 <h2><span class="num">④</span>12の持ち味</h2>
 <p class="lead">上位5つを結果画面に出します。<b>弱点は一切書きません</b>。「効くところ」と「そのままラクに進む方法」だけです。</p>
@@ -448,8 +459,8 @@ a{color:var(--acc2)}
 
 【この人のこと】
 ・呼び名：（呼び名）
-・向いてる道：伝える道（コンテンツ発信）＝ 知ってることを、そのまま届ける
-・持ち味 上位5：みきり(67%)、やりきり(67%)、わくわく(67%)、みぬき(67%)、えがき(67%)
+・向いてる道：みぬく道（診断・コンサル）＝ 課題を切り分けて、答えを出す
+・持ち味 上位5：みきり(67%)、やりきり(67%)、みぬき(67%)、えがき(67%)、つたえ(67%)
 ・進みグセ：こだわり型（いいものを出したい人）→ 中身を完成させてから日付を決めるのではなく、日付を先に決めてしまうこと。
 ・進み具合：9つ中 0つ／これまで0回動いた
 ・やる理由：（やる理由）
@@ -458,8 +469,8 @@ a{color:var(--acc2)}
 
 【持ち味に近い副業（上位3つ）】
 ・せどり：安く仕入れて、高く売る。中古でも新品でも輸入品でも成り立ちます。
-・ハンドメイド販売：自分で作ったものを minne や Creema などで売ります。
-・D2C・自社商品販売：自分のブランドで商品を企画し、Shopify や BASE で直接売ります。
+・SNS構築・運用代行：企業や個人のアカウントを設計して運用し、集客や売上に貢献します。
+・Webマーケティング・広告運用：広告の運用や集客の設計で、売上を伸ばします。
 
 【いま目の前にあること】
 「誰に向けてやるか」をひとことで書く
@@ -473,7 +484,7 @@ a{color:var(--acc2)}
 ② 私の答えを聞いて、3ヶ月後にこうなっていたい姿を一文にまとめる
 ③ 今週やることを1つだけ、15分で終わるサイズにして提案する
 ④ それをやったと報告する場所を一緒に決める</pre>
-<p class="w">968文字</p></div><div class="card">
+<p class="w">956文字</p></div><div class="card">
 <h3>🌙 今週どうだった？<span class="cat">一週間をふりかえって、次を軽くする</span></h3>
 <pre>【あなたの役割】
 あなたは、副業をはじめたい人の相談相手です。次のことを必ず守ってください。
@@ -488,8 +499,8 @@ a{color:var(--acc2)}
 
 【この人のこと】
 ・呼び名：（呼び名）
-・向いてる道：伝える道（コンテンツ発信）＝ 知ってることを、そのまま届ける
-・持ち味 上位5：みきり(67%)、やりきり(67%)、わくわく(67%)、みぬき(67%)、えがき(67%)
+・向いてる道：みぬく道（診断・コンサル）＝ 課題を切り分けて、答えを出す
+・持ち味 上位5：みきり(67%)、やりきり(67%)、みぬき(67%)、えがき(67%)、つたえ(67%)
 ・進みグセ：こだわり型（いいものを出したい人）→ 中身を完成させてから日付を決めるのではなく、日付を先に決めてしまうこと。
 ・進み具合：9つ中 0つ／これまで0回動いた
 ・やる理由：（やる理由）
@@ -498,8 +509,8 @@ a{color:var(--acc2)}
 
 【持ち味に近い副業（上位3つ）】
 ・せどり：安く仕入れて、高く売る。中古でも新品でも輸入品でも成り立ちます。
-・ハンドメイド販売：自分で作ったものを minne や Creema などで売ります。
-・D2C・自社商品販売：自分のブランドで商品を企画し、Shopify や BASE で直接売ります。
+・SNS構築・運用代行：企業や個人のアカウントを設計して運用し、集客や売上に貢献します。
+・Webマーケティング・広告運用：広告の運用や集客の設計で、売上を伸ばします。
 
 【いま目の前にあること】
 「誰に向けてやるか」をひとことで書く
@@ -513,7 +524,7 @@ a{color:var(--acc2)}
 ② できなかったことは責めず、「サイズが大きすぎただけ」という前提で一緒に見直す
 ③ 来週やることを1つ決める。先週やれなかったなら、半分の大きさにして出す
 ④ 最後に、来週の私に向けた短い一言を書く</pre>
-<p class="w">947文字</p></div><div class="card">
+<p class="w">935文字</p></div><div class="card">
 <h3>🫧 気が乗らない…<span class="cat">3分でできるサイズまで小さくする</span></h3>
 <pre>【あなたの役割】
 あなたは、副業をはじめたい人の相談相手です。次のことを必ず守ってください。
@@ -528,8 +539,8 @@ a{color:var(--acc2)}
 
 【この人のこと】
 ・呼び名：（呼び名）
-・向いてる道：伝える道（コンテンツ発信）＝ 知ってることを、そのまま届ける
-・持ち味 上位5：みきり(67%)、やりきり(67%)、わくわく(67%)、みぬき(67%)、えがき(67%)
+・向いてる道：みぬく道（診断・コンサル）＝ 課題を切り分けて、答えを出す
+・持ち味 上位5：みきり(67%)、やりきり(67%)、みぬき(67%)、えがき(67%)、つたえ(67%)
 ・進みグセ：こだわり型（いいものを出したい人）→ 中身を完成させてから日付を決めるのではなく、日付を先に決めてしまうこと。
 ・進み具合：9つ中 0つ／これまで0回動いた
 ・やる理由：（やる理由）
@@ -538,8 +549,8 @@ a{color:var(--acc2)}
 
 【持ち味に近い副業（上位3つ）】
 ・せどり：安く仕入れて、高く売る。中古でも新品でも輸入品でも成り立ちます。
-・ハンドメイド販売：自分で作ったものを minne や Creema などで売ります。
-・D2C・自社商品販売：自分のブランドで商品を企画し、Shopify や BASE で直接売ります。
+・SNS構築・運用代行：企業や個人のアカウントを設計して運用し、集客や売上に貢献します。
+・Webマーケティング・広告運用：広告の運用や集客の設計で、売上を伸ばします。
 
 【いま目の前にあること】
 「誰に向けてやるか」をひとことで書く
@@ -556,7 +567,7 @@ a{color:var(--acc2)}
    ※調べる・考える・計画するのは無しで。「書く」「送る」「押す」など、手が動くものにしてください
 ③ それすら重い日のために、30秒でできる代わりの動きも1つ用意してください
 ④ どちらかをやったら、なんと報告すればいいか一文で書いてください</pre>
-<p class="w">1055文字</p></div><div class="card">
+<p class="w">1043文字</p></div><div class="card">
 <h3>🪙 お金の話<span class="cat">値段の決め方と、最初の声のかけ方</span></h3>
 <pre>【あなたの役割】
 あなたは、副業をはじめたい人の相談相手です。次のことを必ず守ってください。
@@ -571,8 +582,8 @@ a{color:var(--acc2)}
 
 【この人のこと】
 ・呼び名：（呼び名）
-・向いてる道：伝える道（コンテンツ発信）＝ 知ってることを、そのまま届ける
-・持ち味 上位5：みきり(67%)、やりきり(67%)、わくわく(67%)、みぬき(67%)、えがき(67%)
+・向いてる道：みぬく道（診断・コンサル）＝ 課題を切り分けて、答えを出す
+・持ち味 上位5：みきり(67%)、やりきり(67%)、みぬき(67%)、えがき(67%)、つたえ(67%)
 ・進みグセ：こだわり型（いいものを出したい人）→ 中身を完成させてから日付を決めるのではなく、日付を先に決めてしまうこと。
 ・進み具合：9つ中 0つ／これまで0回動いた
 ・やる理由：（やる理由）
@@ -581,8 +592,8 @@ a{color:var(--acc2)}
 
 【持ち味に近い副業（上位3つ）】
 ・せどり：安く仕入れて、高く売る。中古でも新品でも輸入品でも成り立ちます。
-・ハンドメイド販売：自分で作ったものを minne や Creema などで売ります。
-・D2C・自社商品販売：自分のブランドで商品を企画し、Shopify や BASE で直接売ります。
+・SNS構築・運用代行：企業や個人のアカウントを設計して運用し、集客や売上に貢献します。
+・Webマーケティング・広告運用：広告の運用や集客の設計で、売上を伸ばします。
 
 【いま目の前にあること】
 「誰に向けてやるか」をひとことで書く
@@ -597,14 +608,14 @@ a{color:var(--acc2)}
 ③ 最初に声をかける相手を、私の身近な人から一緒に探す
 ④ その人に送る文面を、売り込みっぽくならない形で下書きする
 ⑤ いつ送るか、日付だけ決めさせる</pre>
-<p class="w">974文字</p></div><div class="card">
+<p class="w">962文字</p></div><div class="card">
 <h3>📋 面談の準備<span class="cat">クライアント面談の台本をつくる</span></h3>
 <pre>あなたはコーチの補佐役です。次の相手との面談準備を手伝ってください。
 
 【この人のこと】
 ・呼び名：（呼び名）
-・向いてる道：伝える道（コンテンツ発信）＝ 知ってることを、そのまま届ける
-・持ち味 上位5：みきり(67%)、やりきり(67%)、わくわく(67%)、みぬき(67%)、えがき(67%)
+・向いてる道：みぬく道（診断・コンサル）＝ 課題を切り分けて、答えを出す
+・持ち味 上位5：みきり(67%)、やりきり(67%)、みぬき(67%)、えがき(67%)、つたえ(67%)
 ・進みグセ：こだわり型（いいものを出したい人）→ 中身を完成させてから日付を決めるのではなく、日付を先に決めてしまうこと。
 ・進み具合：9つ中 0つ／これまで0回動いた
 ・やる理由：（やる理由）
@@ -613,8 +624,8 @@ a{color:var(--acc2)}
 
 【持ち味に近い副業（上位3つ）】
 ・せどり：安く仕入れて、高く売る。中古でも新品でも輸入品でも成り立ちます。
-・ハンドメイド販売：自分で作ったものを minne や Creema などで売ります。
-・D2C・自社商品販売：自分のブランドで商品を企画し、Shopify や BASE で直接売ります。
+・SNS構築・運用代行：企業や個人のアカウントを設計して運用し、集客や売上に貢献します。
+・Webマーケティング・広告運用：広告の運用や集客の設計で、売上を伸ばします。
 
 【いま目の前にあること】
 「誰に向けてやるか」をひとことで書く
@@ -632,7 +643,7 @@ a{color:var(--acc2)}
 ④ 最初に使う質問3つ／深掘りの質問5つ（すべて持ち味を引き出す方向で）
 ⑤ 最後に渡す宿題の候補を2つ（どちらも15分以内）
 ⑥ 話すときに気をつけたい点</pre>
-<p class="w">680文字</p></div>
+<p class="w">668文字</p></div>
 </section>
 </main>
 <footer>

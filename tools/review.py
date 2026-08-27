@@ -34,8 +34,8 @@ gates = ''.join(f'''<div class="card gate-{k}">
 <p>{e(g['body'])}</p>
 {'<ul class="tips">' + ''.join(f'<li>{e(x)}</li>' for x in g['tips']) + '</ul>' if g.get('tips') else ''}
 <p class="cta">ボタン：{e(g['cta'])}</p></div>''' for k, g in D['GATES'].items())
-S1 = sec('gate', '①', '適性チェック（4問）',
-    '最初に聞く4問。<b>気持ち</b>（変えたい・続けられる）と<b>余力</b>（時間・手放せる）を別々に測り、3つに分かれます。合計点ひとつで切ると「やる気はあるが時間がない人」を弾いてしまうため、2軸にしています。',
+S1 = sec('gate', '①', f'適性チェック（必須{D["GATE_CORE"]}問）',
+    '最初に聞く3問（必須）と、追加1問。<b>気持ち</b>（変えたい・続けられる）と<b>余力</b>（時間・手放せる）を別々に測り、3つに分かれます。合計点ひとつで切ると「やる気はあるが時間がない人」を弾いてしまうため、2軸にしています。',
     gq + scale + '<h3 class="sub">判定の3パターン</h3>' + gates)
 
 # ---------- 2. 副業以外の道 ----------
@@ -51,13 +51,31 @@ S2 = sec('other', '②', '副業以外の道',
 <p class="note">{e(D['MONEY_NOTE'])}</p></div>''')
 
 # ---------- 3. 持ち味チェック ----------
-tq = '<ol class="qs">' + ''.join(
-    f'<li><span class="tag">{e(D["TRAITS"][c]["name"])}</span>{e(t)}</li>' for c, t in D['Q_TRAIT']) + '</ol>'
-sq = '<ol class="qs" start="25">' + ''.join(
-    f'<li><span class="tag t-style">{e(D["STYLES"][c]["name"])}</span>{e(t)}</li>' for c, t in D['Q_STYLE']) + '</ol>'
-S3 = sec('quiz', '③', '持ち味チェック（必須17問＋追加17問）',
-    '各項目とも2問ずつ用意し、<b>1問目だけが必須</b>です（持ち味12＋グセ5＝17問）。2問目は「もっと正確にする」を選んだ人だけが答えます。腰が重い人に42問は重すぎるため、<b>適性4問＋17問＝合計21問で結果が完成する</b>ようにしています。',
-    '<h3 class="sub">持ち味をみる 24問<span class="goal">奇数番号が必須・偶数番号は追加</span></h3>' + tq + '<h3 class="sub">進みグセをみる 10問<span class="goal">奇数番号が必須・偶数番号は追加</span></h3>' + sq + scale)
+half = len(D['Q_PAIR']) // 2
+def pair_rows(items, base):
+    out = '<ol class="qs pairs" start="%d">' % (base + 1)
+    for (pair, ta, tb) in items:
+        out += ('<li><span class="pa">%s</span><span class="pv">か</span><span class="pb">%s</span>'
+                '<span class="pw">%s ↔ %s</span></li>') % (
+            e(ta), e(tb), e(D['TRAITS'][pair[0]]['name']), e(D['TRAITS'][pair[1]]['name']))
+    return out + '</ol>'
+picks = ''
+for i, q in enumerate(D['Q_STYLE_PICK']):
+    picks += '<h4 class="pickq">%s%s</h4><ul class="picks">' % (
+        e(q['ask']), '（必須）' if i == 0 else '（追加）')
+    picks += ''.join('<li><span class="tag t-style">%s</span>%s</li>' % (
+        e(D['STYLES'][c]['name']), e(t)) for c, t in q['opts'])
+    picks += '</ul>'
+S3 = sec('quiz', '③', '設問（必須10問）',
+    '<b>1問で2つの持ち味を同時に測ります。</b>「まず試してみる／まず調べてみる」のように、'
+    'どちらを選んでも否定にならない対で聞くので、12種を6問で測れます。'
+    'Aを「こっち」で選べばBは反対の値になり、1タップが2種ぶんの答えになります。',
+    '<h3 class="sub">どっち寄り？　前半6問<span class="goal">必須。12種すべてが1回ずつ出る</span></h3>'
+    + pair_rows(D['Q_PAIR'][:half], 0)
+    + '<p class="scale">選び方：' + ' ／ '.join(e(x['label']) + '(' + x['side'].upper() + ')' for x in D['PAIR_SCALE']) + '</p>'
+    + '<h3 class="sub">どっち寄り？　後半6問<span class="goal">追加。同じ12種を別の組み合わせで</span></h3>'
+    + pair_rows(D['Q_PAIR'][half:], half)
+    + '<h3 class="sub">進みグセ<span class="goal">5つから1つ選ぶだけ</span></h3>' + picks)
 
 # ---------- 4. 12の持ち味 ----------
 traits = ''.join(f'''<div class="card">
@@ -272,6 +290,17 @@ footer{{grid-column:1/-1;border-top:1px solid var(--line);margin-top:60px;
   padding:26px 0 60px;font-size:12px;color:var(--dim);line-height:1.9}}
 a{{color:var(--acc2)}}
 :focus-visible{{outline:2px solid var(--acc);outline-offset:2px}}
+
+ol.qs.pairs li{{padding:13px 15px}}
+.pa,.pb{{font-weight:700;font-size:14.5px}}
+.pv{{color:var(--dim);font-size:12px;margin:0 9px}}
+.pw{{display:block;font-size:11px;color:var(--dim);margin-top:3px}}
+.opt{{font-size:10px;color:var(--acc2);font-style:normal;margin-left:8px;
+  border:1px solid var(--line);border-radius:99px;padding:1px 7px}}
+.pickq{{font-size:14px;font-weight:700;margin:16px 0 8px}}
+ul.picks{{list-style:none;display:grid;gap:1px;background:var(--line);
+  border:1px solid var(--line);border-radius:10px;overflow:hidden}}
+ul.picks li{{background:var(--card);padding:11px 15px;font-size:14px}}
 @media print{{ nav.toc{{display:none}} .wrap{{grid-template-columns:1fr}} section{{break-inside:avoid}} }}
 </style>
 
@@ -280,7 +309,7 @@ a{{color:var(--acc2)}}
   <h1>StrengthPath 文言集</h1>
   <p class="sub">アプリに出てくる文章を、ぜんぶ書き出したものです。画面を触らずに内容だけ確認できます。<code></code></p>
   <div class="meta">
-    <span>必須 {len(D['Q_GATE']) + len(D['Q_TRAIT'])//2 + len(D['Q_STYLE'])//2}問</span><span>追加 {len(D['Q_TRAIT'])//2 + len(D['Q_STYLE'])//2}問</span>
+    <span>必須 {D['GATE_CORE'] + len(D['Q_PAIR'])//2 + 1}問</span><span>追加 {len(D['Q_GATE']) - D['GATE_CORE'] + len(D['Q_PAIR'])//2 + 1}問</span>
     <span>持ち味 {len(D['TRAITS'])}種</span>
     <span>進みグセ {len(D['STYLES'])}種</span><span>道 {len(D['TYPES'])}種</span>
     <span>副業 {len(D['JOBS'])}コ</span><span>やること 9つ×{len(D['TYPES'])}</span>
