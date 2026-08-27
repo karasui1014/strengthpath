@@ -120,13 +120,16 @@ for ck, cv in D['JOB_CATS'].items():
         jobs += f'''<div class="card">
 <h3>{e(j['name'])}</h3>
 <p class="catch">{e(j['what'])}</p>
+<div class="yen"><div class="yen-h">お金のこと</div>
+{rows([('いくらになる', j['unit']), ('最初の1円まで', j['firstYen']),
+       ('月5万円にするなら', j['to5']), ('はじめる費用', j['cost']), ('売る場所', j['where'])])}</div>
 {rows([('最初の一歩', j['first']), ('いるもの', j['need']),
        ('AIの使いどころ', j['ai']), ('正直なところ', j['real'])])}
 <p class="w">効く持ち味：{e('・'.join(D['TRAITS'][k]['name'] + '×' + str(w) for k, w in j['w'].items()))}</p>
 </div>'''
     jobs += '</div>'
 S7 = sec('jobs', '⑦', f'副業カタログ（{len(D["JOBS"])}コ）',
-    '分類の枠組みはリベラルアーツ大学「おすすめの副業19選＋番外編」を参考に、<b>解説文と持ち味との対応づけは独自に作成</b>したものです。「正直なところ」には都合の悪い面も書いています。',
+    '分類の枠組みはリベラルアーツ大学「おすすめの副業19選＋番外編」を参考に、<b>解説文と持ち味との対応づけは独自に作成</b>したものです。「正直なところ」には都合の悪い面も書いています。<br><b>お金のこと</b>は、単価・期間・必要な件数・初期費用・売り場を20コすべてに入れています。' + '<br><span class="note">' + e(D['YEN_NOTE']) + '</span>',
     jobs)
 
 # ---------- 8. 9つのやること ----------
@@ -301,6 +304,11 @@ ol.qs.pairs li{{padding:13px 15px}}
 ul.picks{{list-style:none;display:grid;gap:1px;background:var(--line);
   border:1px solid var(--line);border-radius:10px;overflow:hidden}}
 ul.picks li{{background:var(--card);padding:11px 15px;font-size:14px}}
+
+.yen{{background:var(--quiet);border:1px solid var(--line);border-radius:10px;
+  padding:12px 14px;margin:11px 0}}
+.yen-h{{font-size:10.5px;font-weight:800;letter-spacing:.1em;color:var(--acc);margin-bottom:6px}}
+.yen dl.rows dt{{color:var(--acc2)}}
 @media print{{ nav.toc{{display:none}} .wrap{{grid-template-columns:1fr}} section{{break-inside:avoid}} }}
 </style>
 
