@@ -34,8 +34,8 @@ gates = ''.join(f'''<div class="card gate-{k}">
 <p>{e(g['body'])}</p>
 {'<ul class="tips">' + ''.join(f'<li>{e(x)}</li>' for x in g['tips']) + '</ul>' if g.get('tips') else ''}
 <p class="cta">ボタン：{e(g['cta'])}</p></div>''' for k, g in D['GATES'].items())
-S1 = sec('gate', '①', '適性チェック（8問）',
-    '最初に聞く8問。<b>気持ち</b>（変えたい・続けられる）と<b>余力</b>（時間・手放せる）を別々に測り、3つに分かれます。合計点ひとつで切ると「やる気はあるが時間がない人」を弾いてしまうため、2軸にしています。',
+S1 = sec('gate', '①', '適性チェック（4問）',
+    '最初に聞く4問。<b>気持ち</b>（変えたい・続けられる）と<b>余力</b>（時間・手放せる）を別々に測り、3つに分かれます。合計点ひとつで切ると「やる気はあるが時間がない人」を弾いてしまうため、2軸にしています。',
     gq + scale + '<h3 class="sub">判定の3パターン</h3>' + gates)
 
 # ---------- 2. 副業以外の道 ----------
@@ -55,9 +55,9 @@ tq = '<ol class="qs">' + ''.join(
     f'<li><span class="tag">{e(D["TRAITS"][c]["name"])}</span>{e(t)}</li>' for c, t in D['Q_TRAIT']) + '</ol>'
 sq = '<ol class="qs" start="25">' + ''.join(
     f'<li><span class="tag t-style">{e(D["STYLES"][c]["name"])}</span>{e(t)}</li>' for c, t in D['Q_STYLE']) + '</ol>'
-S3 = sec('quiz', '③', '持ち味チェック（34問）',
-    '持ち味24問 ＋ 進みグセ10問。4択で「どちらとも」を置いていません。迷う時間を減らすためです。',
-    '<h3 class="sub">持ち味をみる 24問</h3>' + tq + '<h3 class="sub">進みグセをみる 10問</h3>' + sq + scale)
+S3 = sec('quiz', '③', '持ち味チェック（必須17問＋追加17問）',
+    '各項目とも2問ずつ用意し、<b>1問目だけが必須</b>です（持ち味12＋グセ5＝17問）。2問目は「もっと正確にする」を選んだ人だけが答えます。腰が重い人に42問は重すぎるため、<b>適性4問＋17問＝合計21問で結果が完成する</b>ようにしています。',
+    '<h3 class="sub">持ち味をみる 24問<span class="goal">奇数番号が必須・偶数番号は追加</span></h3>' + tq + '<h3 class="sub">進みグセをみる 10問<span class="goal">奇数番号が必須・偶数番号は追加</span></h3>' + sq + scale)
 
 # ---------- 4. 12の持ち味 ----------
 traits = ''.join(f'''<div class="card">
@@ -280,8 +280,8 @@ a{{color:var(--acc2)}}
   <h1>StrengthPath 文言集</h1>
   <p class="sub">アプリに出てくる文章を、ぜんぶ書き出したものです。画面を触らずに内容だけ確認できます。<code></code></p>
   <div class="meta">
-    <span>適性 {len(D['Q_GATE'])}問</span><span>持ち味 {len(D['Q_TRAIT'])}問</span>
-    <span>進みグセ {len(D['Q_STYLE'])}問</span><span>持ち味 {len(D['TRAITS'])}種</span>
+    <span>必須 {len(D['Q_GATE']) + len(D['Q_TRAIT'])//2 + len(D['Q_STYLE'])//2}問</span><span>追加 {len(D['Q_TRAIT'])//2 + len(D['Q_STYLE'])//2}問</span>
+    <span>持ち味 {len(D['TRAITS'])}種</span>
     <span>進みグセ {len(D['STYLES'])}種</span><span>道 {len(D['TYPES'])}種</span>
     <span>副業 {len(D['JOBS'])}コ</span><span>やること 9つ×{len(D['TYPES'])}</span>
     <span>AI文章 {len(P)}種</span>

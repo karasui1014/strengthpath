@@ -514,7 +514,11 @@ const STYLES = {
   }
 };
 
-/* ===== 設問（持ち味24問 + 進みグセ10問）===== */
+/* ===== 設問（持ち味24問 + 進みグセ10問）=====
+   各項目とも2問ずつ、続けて並べてある。
+   ・偶数番目（1問目）＝ 必須。これだけで結果が出る
+   ・奇数番目（2問目）＝ 追加。「もっと正確にする」を押した人だけ答える
+   並び順を変えるとこの前提が崩れるので、増やすときは項目ごとに2問セットで足すこと。 */
 const Q_TRAIT = [
   ['sokudan', '「やってみようかな」と思ったら、その日のうちに手が動いていることが多い'],
   ['sokudan', '迷ったときは、考えるより試したほうが早いと感じる'],
@@ -701,13 +705,9 @@ const PROMPTS = [
    ※「向いていない」とは絶対に言わない。「いまは、こっちのほうが効きます」と案内する。 */
 const Q_GATE = [
   ['time', '本業のあと、平日に1時間くらいPCに向かう時間はつくれそう'],
-  ['time', '休みの日に、まとまった時間を数時間つくれそう'],
   ['give', 'いま楽しんでいることを、ひとつ減らしてもいいと思える'],
-  ['give', '動画を見る時間や、なんとなく過ごす時間を少し削ってもいい'],
   ['why',  '今の収入や働き方を、変えたい気持ちがある'],
-  ['why',  '「このままでいいのかな」と思うことが、ときどきある'],
-  ['keep', '半年くらい結果が出なくても、続けられそう'],
-  ['keep', '家族や同居人の理解は得られそう（ひとりで決められるなら「そう」）']
+  ['keep', '半年くらい結果が出なくても、続けられそう']
 ];
 
 const GATES = {
@@ -971,7 +971,8 @@ let S = load();
 
 function blankProfile(name) {
   return { id: uid(), name: name || 'あなた', createdAt: today(),
-    gate: null, gateQuiz: null, quiz: null, result: null, steps: null, logs: [], sessions: [],
+    gate: null, gateQuiz: null, quiz: null, answers: null, depth: null,
+    result: null, steps: null, logs: [], sessions: [],
     goal: { why: '', reward: '', hours: '' } };
 }
 function load() {
@@ -1021,6 +1022,13 @@ function cleanProfile(raw) {
       (c && Array.isArray(c.items) ? c.items : []).forEach(x => { if (x && x.done) doneTexts.add(str(x.text)); }));
     p.steps.forEach(c => c.items.forEach(x => { if (doneTexts.has(x.text)) { x.done = true; x.at = null; } }));
   }
+  if (raw.answers && typeof raw.answers === 'object') {
+    const ok = {};
+    Q_TRAIT.forEach((_, i) => { const v = num(raw.answers['t' + i], 1, 4, null); if (v) ok['t' + i] = v; });
+    Q_STYLE.forEach((_, i) => { const v = num(raw.answers['s' + i], 1, 4, null); if (v) ok['s' + i] = v; });
+    if (Object.keys(ok).length) p.answers = ok;
+  }
+  p.depth = pick1(raw.depth, ['core', 'full'], p.answers ? 'core' : null);
   p.logs = (Array.isArray(raw.logs) ? raw.logs : []).slice(-LIM.list)
     .map(l => ({ date: str(l && l.date, 10), text: str(l && l.text) }))
     .filter(l => l.date && l.text);
@@ -1060,13 +1068,28 @@ function applyTheme() {
 const isDark = () => S.dark === 'on' ||
   (S.dark === 'auto' && matchMedia('(prefers-color-scheme: dark)').matches);
 
-/* ========== 採点（4段階 → 0〜100%） ========== */
+/* ========== 採点（4段階 → 0〜100%） =====
+   答えた問題の平均で出す。必須21問だけでも、追加17問まで答えても、
+   同じものさしで比べられるようにするため。 */
+function avgBy(list, prefix, ans) {
+  const acc = {};
+  list.forEach(([c], i) => {
+    const v = ans[prefix + i];
+    if (typeof v === 'number') { acc[c] = acc[c] || { s: 0, n: 0 }; acc[c].s += v; acc[c].n++; }
+  });
+  return acc;
+}
+function toPct(acc, keys) {
+  const r = {};
+  keys.forEach(k => {
+    const v = acc[k] ? acc[k].s / acc[k].n : 2.5;   // 未回答はまんなか
+    r[k] = Math.round((v - 1) / 3 * 100);
+  });
+  return r;
+}
 function scoreAll(a) {
-  const t = {}, st = {};
-  Q_TRAIT.forEach(([c], i) => { t[c] = (t[c] || 0) + (a['t' + i] || 2); });
-  Q_STYLE.forEach(([c], i) => { st[c] = (st[c] || 0) + (a['s' + i] || 2); });
-  const pct = o => { const r = {}; for (const k in o) r[k] = Math.round((o[k] - 2) / 6 * 100); return r; };
-  const tp = pct(t), sp = pct(st);
+  const tp = toPct(avgBy(Q_TRAIT, 't', a), Object.keys(TRAITS));
+  const sp = toPct(avgBy(Q_STYLE, 's', a), Object.keys(STYLES));
   /* 絶対値で比べると「全部そう」と答えた人が毎回同じ道になってしまうので、
      本人の平均からの差（＝その人の中での相対的な高さ）で判定する */
   const vals = Object.values(tp);
@@ -1090,14 +1113,14 @@ const rank = o => Object.entries(o).sort((x, y) => y[1] - x[1]);
    気持ち（why + keep）と 余力（time + give）を別々に見る。
    合計点ひとつで切ると「やる気はあるが時間がない人」を弾いてしまうため。 */
 function scoreGate(a) {
-  const g = {};
-  Q_GATE.forEach(([c], i) => { g[c] = (g[c] || 0) + (a['g' + i] || 2); });
-  const motive = (g.why || 0) + (g.keep || 0);     // 4〜16
-  const room   = (g.time || 0) + (g.give || 0);    // 4〜16
+  const acc = avgBy(Q_GATE, 'g', a);
+  const ax = k => (acc[k] ? acc[k].s / acc[k].n : 2.5) * 2;   // 各軸 2〜8
+  const motive = ax('why') + ax('keep');           // 4〜16
+  const room   = ax('time') + ax('give');          // 4〜16
   let tier = 'other';
   if (motive >= 11 && room >= 11) tier = 'ready';
   else if (motive >= 11) tier = 'time';
-  return { motive, room, tier, date: today() };
+  return { motive: Math.round(motive), room: Math.round(room), tier, date: today() };
 }
 
 /* ===== 副業カタログとのマッチング =====
@@ -1119,6 +1142,16 @@ function buildSteps(type) {
     items: [COMMON_STEPS[ch.id], ...(ts[ch.id] || [])]
       .map(x => ({ id: uid(), text: x, done: false, at: null })) }));
 }
+/* 道が変わったときに、終わったやることだけ引き継いで作り直す */
+function carrySteps(oldSteps, type) {
+  const next = buildSteps(type);
+  if (!oldSteps) return next;
+  const done = new Set();
+  oldSteps.forEach(c => c.items.forEach(x => { if (x.done) done.add(x.text); }));
+  next.forEach(c => c.items.forEach(x => { if (done.has(x.text)) { x.done = true; x.at = today(); } }));
+  return next;
+}
+
 function flat(p) {
   if (!p.steps) return [];
   const o = []; p.steps.forEach((c, i) => c.items.forEach(x => o.push({ ...x, ci: i })));
@@ -1203,29 +1236,43 @@ function vWelcome() {
       <h1>集めるのが好きなあなたへ。<br><b>もう、材料はそろっています。</b></h1>
       <p>本もセミナーも、集めてきたものは全部むだになりません。
       あとは<b>どこから手をつけるか</b>だけ。
-      まず<b>いまの状況を8問</b>だけ聞いて、そのうえで持ち味を見ていきます。</p>
+      まず<b>いまの状況を4問</b>だけ聞いて、そのうえで持ち味を見ていきます。</p>
       <button class="btn xl" data-nav="gate">はじめる</button>
       <ul class="easy">
-        <li>1問3秒。指1本でOK</li>
+        <li>ぜんぶで${CORE_COUNT}問。1問3秒、指1本でOK</li>
         <li>途中でやめても、続きから始められます</li>
         <li>結果はこの端末の中だけ。登録もいりません</li>
       </ul>
     </div>`;
 }
 
-/* ========== しつもん ========== */
-const QALL = () => [...Q_TRAIT.map((q, i) => ({ k: 't' + i, t: q[1] })),
-                    ...Q_STYLE.map((q, i) => ({ k: 's' + i, t: q[1] }))];
+/* ========== しつもん ==========
+   必須は各項目の1問目だけ（偶数番目）。これで21問。
+   2問目（奇数番目）は「もっと正確にする」を選んだ人にだけ聞く。
+   途中でやめる人のほうが多い前提なので、先に結果が出ることを優先している。 */
+const idxOf = (arr, extra) => arr.map((_, i) => i).filter(i => (i % 2 === 1) === !!extra);
+const QALL = (extra) => [
+  ...idxOf(Q_TRAIT, extra).map(i => ({ k: 't' + i, t: Q_TRAIT[i][1] })),
+  ...idxOf(Q_STYLE, extra).map(i => ({ k: 's' + i, t: Q_STYLE[i][1] }))
+];
+const CORE_COUNT = QALL(false).length + Q_GATE.length;   // 21
+const EXTRA_COUNT = QALL(true).length;                    // 17
 
 function vQuiz(p) {
-  if (!p.quiz) p.quiz = { i: 0, a: {} };
-  const qs = QALL(), q = qs[p.quiz.i];
+  if (!p.quiz) p.quiz = { i: 0, a: {}, extra: false };
+  const extra = !!p.quiz.extra;
+  const qs = QALL(extra), q = qs[p.quiz.i];
   if (p.quiz.i >= qs.length) {
-    p.result = scoreAll(p.quiz.a);
-    p.steps = buildSteps(p.result.type);
+    p.answers = Object.assign({}, p.answers || {}, p.quiz.a);
+    const before = p.result && p.result.type;
+    p.result = scoreAll(p.answers);
+    p.depth = extra ? 'full' : 'core';
+    /* 道が変わらなければ、進めてきたやることはそのまま。
+       変わったときだけ作り直し、終わったものは文言で引き継ぐ。 */
+    if (!p.steps || before !== p.result.type) p.steps = carrySteps(p.steps, p.result.type);
     p.quiz = null; save();
     setTimeout(() => go('clues'), 420);
-    return `<div class="welcome">${akariTag('happy', 128)}<div class="hi">${esc(VOICE.quizEnd)}</div></div>`;
+    return `<div class="welcome">${akariTag('happy', 128)}<div class="hi">${esc(extra ? '……はっきりしました。' : VOICE.quizEnd)}</div></div>`;
   }
   const left = qs.length - p.quiz.i;
   return `<div class="quiz">
@@ -1290,6 +1337,12 @@ function vClues(p) {
     <button class="btn ghost wide" data-nav="jobs">20コぜんぶ見る</button>
 
     <button class="btn xl" data-nav="book">やることを見る</button>
+    ${p.depth === 'full' ? '' : `<div class="soft deepen">
+      <div class="mini">もっと正確にしたい人だけ</div>
+      <p>いまの結果は${CORE_COUNT}問ぶんです。あと${EXTRA_COUNT}問（1分）答えると、
+      持ち味の順番と合う副業がはっきりします。<b>やらなくても、このまま進めます。</b></p>
+      <button class="btn ghost" data-deepen="1">あと${EXTRA_COUNT}問だけ答える</button>
+    </div>`}
     <button class="btn link wide" data-retake="1">もう一度やってみる</button>
     <button class="btn link wide" data-regate="1">いまの状況を聞き直す</button>`;
 }
@@ -1662,14 +1715,18 @@ function bind(p) {
   on('[data-ext]', 'click', e => window.open(e.currentTarget.dataset.ext, '_blank', 'noopener'));
 
   on('[data-ans]', 'click', e => {
-    p.quiz.a[QALL()[p.quiz.i].k] = +e.currentTarget.dataset.ans;
+    p.quiz.a[QALL(p.quiz.extra)[p.quiz.i].k] = +e.currentTarget.dataset.ans;
     p.quiz.i++; save(); render();
   });
   on('[data-back]', 'click', () => { p.quiz.i = Math.max(0, p.quiz.i - 1); render(); });
   on('[data-pause]', 'click', () => { save(); go('home'); });
   on('[data-retake]', 'click', () => {
     if (!confirm('もう一度やってみますか？（記録はそのまま残ります）')) return;
-    p.quiz = { i: 0, a: {} }; go('quiz');
+    p.answers = null; p.depth = null; p.quiz = { i: 0, a: {}, extra: false }; go('quiz');
+  });
+  on('[data-deepen]', 'click', () => {
+    p.answers = p.answers || {};
+    p.quiz = { i: 0, a: {}, extra: true }; go('quiz');
   });
   on('[data-regate]', 'click', () => {
     if (!confirm('いまの状況を、もう一度聞きますか？')) return;

@@ -23,6 +23,7 @@ const FILES = ['assets/data.js','assets/akari.js','assets/app.js'];
 vm.runInContext(FILES.map(read).join('\n') + `
 ;globalThis.API = { scoreGate, scoreAll, matchJobs, buildSteps, blankProfile, makePrompt,
   flat, nextStep, doneCount, totalCount, timesMoved, ymd, today, cleanStore, cleanProfile,
+  QALL, CORE_COUNT, EXTRA_COUNT, carrySteps,
   TRAITS, STYLES, TYPES, JOBS, JOB_CATS, GATES, CHAPTERS, PROMPTS, THEMES, VOICE,
   Q_GATE, Q_TRAIT, Q_STYLE, SCALE, OTHER_WAYS, COMMON_STEPS, TYPE_STEPS, LEARN_LINK, MONEY_NOTE };`,
   ctx, { filename:'bundle.js' });
@@ -51,28 +52,29 @@ const fill = (n,v) => Array(n).fill(v);
 
 /* ================= 1. 適性チェック ================= */
 group('1. 適性チェック（気持ち×余力の2軸判定）');
-// 並び: time,time, give,give, why,why, keep,keep
+// 並び: time, give, why, keep（各1問）
+t('適性チェックは4問だけ', () => eq(A.Q_GATE.length, 4));
 t('時間も気持ちも十分 → ready', () => {
-  const g = gate([4,4, 4,4, 4,4, 4,4]); eq(g.tier, 'ready'); return `気持ち${g.motive} 余力${g.room}`;
+  const g = gate([4, 4, 4, 4]); eq(g.tier, 'ready'); return `気持ち${g.motive} 余力${g.room}`;
 });
 t('やる気はあるが時間がない → time（弾かない）', () => {
-  const g = gate([1,1, 2,2, 4,4, 4,3]); eq(g.tier, 'time'); return `気持ち${g.motive} 余力${g.room}`;
+  const g = gate([1, 2, 4, 4]); eq(g.tier, 'time'); return `気持ち${g.motive} 余力${g.room}`;
 });
 t('時間はあるが変えたい気持ちが薄い → other', () => {
-  const g = gate([4,4, 4,3, 1,1, 2,2]); eq(g.tier, 'other'); return `気持ち${g.motive} 余力${g.room}`;
+  const g = gate([4, 4, 1, 2]); eq(g.tier, 'other'); return `気持ち${g.motive} 余力${g.room}`;
 });
-t('すべて最低 → other', () => eq(gate(fill(8,1)).tier, 'other'));
-t('すべて最高 → ready', () => eq(gate(fill(8,4)).tier, 'ready'));
-t('ぜんぶ「ややそう」→ ready', () => eq(gate(fill(8,3)).tier, 'ready'));
-t('ぜんぶ「ややちがう」→ other', () => eq(gate(fill(8,2)).tier, 'other'));
+t('すべて最低 → other', () => eq(gate(fill(4,1)).tier, 'other'));
+t('すべて最高 → ready', () => eq(gate(fill(4,4)).tier, 'ready'));
+t('ぜんぶ「ややそう」→ ready', () => eq(gate(fill(4,3)).tier, 'ready'));
+t('ぜんぶ「ややちがう」→ other', () => eq(gate(fill(4,2)).tier, 'other'));
 t('未回答は中間(2)として扱われ落ちない', () => { const g = A.scoreGate({}); ok(['ready','time','other'].includes(g.tier)); return g.tier; });
 t('気持ち・余力は 4〜16 の範囲に収まる', () => {
-  for (let n=0;n<400;n++){ const g = gate(fill(8,0).map(()=>1+Math.floor(Math.random()*4)));
+  for (let n=0;n<400;n++){ const g = gate(fill(4,0).map(()=>1+Math.floor(Math.random()*4)));
     ok(g.motive>=4&&g.motive<=16&&g.room>=4&&g.room<=16, `範囲外 ${g.motive}/${g.room}`); }
 });
 t('3つの分岐すべてに到達できる', () => {
   const seen = new Set();
-  for (let n=0;n<2000;n++) seen.add(gate(fill(8,0).map(()=>1+Math.floor(Math.random()*4))).tier);
+  for (let n=0;n<2000;n++) seen.add(gate(fill(4,0).map(()=>1+Math.floor(Math.random()*4))).tier);
   eq([...seen].sort(), ['other','ready','time']);
 });
 t('GATES に3分岐ぶんの文言が揃っている', () => {
@@ -209,7 +211,7 @@ t('日付はローカル時刻基準（UTCずれなし）', () => {
 group('6. そうだん（AIプロンプト）');
 const pp = (() => { const p = A.blankProfile('テスト');
   p.result = quiz(fill(24,3)); p.steps = A.buildSteps(p.result.type);
-  p.gate = gate(fill(8,3)); return p; })();
+  p.gate = gate(fill(4,3)); return p; })();
 A.PROMPTS.forEach(x => {
   t(`${x.name} が生成される`, () => {
     const s = A.makePrompt(pp, x.id);
@@ -316,7 +318,7 @@ t('持ち味チェックの途中状態を保持できる', () => {
 t('保存データがJSONとして往復できる', () => {
   const p = A.blankProfile('カラスイ');
   p.result = quiz(fill(24,3)); p.steps = A.buildSteps(p.result.type);
-  p.gate = gate(fill(8,3)); p.logs = [{date:'2026-08-27', text:'テスト'}];
+  p.gate = gate(fill(4,3)); p.logs = [{date:'2026-08-27', text:'テスト'}];
   const S = { v:1, theme:'sepia', dark:'auto', mode:'self', activeId:p.id, selfId:p.id, profiles:{[p.id]:p} };
   const back = JSON.parse(JSON.stringify(S));
   eq(back.profiles[p.id].result.type, p.result.type);
@@ -328,7 +330,7 @@ t('保存データがJSONとして往復できる', () => {
 group('10. 読み込みデータの検証（壊れたJSONで落ちないこと）');
 const goodStore = (() => { const p = A.blankProfile('カラスイ');
   p.result = quiz(fill(24,3)); p.steps = A.buildSteps(p.result.type);
-  p.gate = gate(fill(8,3)); p.goal = {why:'旅行',reward:'ヘッドホン',hours:'夜30分'};
+  p.gate = gate(fill(4,3)); p.goal = {why:'旅行',reward:'ヘッドホン',hours:'夜30分'};
   p.logs = [{date:'2026-08-27', text:'やった'}];
   p.steps[0].items[0].done = true;
   return { v:1, theme:'mint', dark:'on', mode:'self', activeId:p.id, selfId:p.id, profiles:{[p.id]:p} }; })();
@@ -397,6 +399,75 @@ t('HTMLらしき文字列を入れても、そのまま保持されるだけ（�
   const c = A.cleanProfile({ name:'<img src=x onerror=alert(1)>' });
   ok(typeof c.name === 'string');
   return '文字列として保持';
+});
+
+
+/* ================= 11. 必須21問 / 追加17問 ================= */
+group('11. 答える量（めんどくさがり向けの分割）');
+t('必須は21問（適性4 + 持ち味12 + グセ5）', () => {
+  eq(A.Q_GATE.length, 4);
+  eq(A.QALL(false).length, 17);
+  eq(A.CORE_COUNT, 21);
+  return `適性${A.Q_GATE.length} + 持ち味とグセ${A.QALL(false).length} = ${A.CORE_COUNT}問`;
+});
+t('追加は17問', () => { eq(A.QALL(true).length, 17); eq(A.EXTRA_COUNT, 17); });
+t('必須と追加で全設問をちょうど覆う', () => {
+  const all = [...A.QALL(false), ...A.QALL(true)].map(q => q.k);
+  eq(new Set(all).size, all.length, '重複がある');
+  eq(all.length, A.Q_TRAIT.length + A.Q_STYLE.length);
+});
+t('必須だけで12の持ち味すべてが1問以上ある', () => {
+  const seen = {};
+  A.QALL(false).forEach(q => { if (q.k[0] === 't') seen[A.Q_TRAIT[+q.k.slice(1)][0]] = 1; });
+  eq(Object.keys(seen).length, 12);
+});
+t('必須だけで5つの進みグセすべてが1問以上ある', () => {
+  const seen = {};
+  A.QALL(false).forEach(q => { if (q.k[0] === 's') seen[A.Q_STYLE[+q.k.slice(1)][0]] = 1; });
+  eq(Object.keys(seen).length, 5);
+});
+t('必須だけでも結果が出る（道・持ち味・グセすべて）', () => {
+  const a = {}; A.QALL(false).forEach((q, i) => a[q.k] = 1 + (i % 4));
+  const r = A.scoreAll(a);
+  ok(A.TYPES[r.type], '道が出ない');
+  eq(Object.keys(r.traits).length, 12); eq(Object.keys(r.styles).length, 5);
+  return A.TYPES[r.type].name;
+});
+t('必須だけでも副業マッチングができる', () => {
+  const a = {}; A.QALL(false).forEach((q, i) => a[q.k] = 1 + (i % 4));
+  const m = A.matchJobs(A.scoreAll(a).traits, 3);
+  eq(m.length, 3);
+  return m.map(x => x.job.name).join(' / ');
+});
+t('追加17問を足しても、同じものさしで比べられる', () => {
+  const core = {}; A.QALL(false).forEach(q => core[q.k] = 4);
+  const full = Object.assign({}, core); A.QALL(true).forEach(q => full[q.k] = 4);
+  const a = A.scoreAll(core), b = A.scoreAll(full);
+  eq(a.traits, b.traits, '全部「そう」なら必須だけでも全部でも同じになるはず');
+});
+t('追加で答えが割れると中間の値になる', () => {
+  const core = {}; A.QALL(false).forEach(q => core[q.k] = 4);
+  const full = Object.assign({}, core); A.QALL(true).forEach(q => full[q.k] = 1);
+  const b = A.scoreAll(full);
+  ok(Object.values(b.traits).every(v => v > 30 && v < 70), '中間に寄っていない');
+  return `持ち味はすべて ${Math.min(...Object.values(b.traits))}〜${Math.max(...Object.values(b.traits))}%`;
+});
+t('道が変わっても、終わったやることは引き継がれる', () => {
+  const s1 = A.buildSteps('content');
+  s1[0].items[0].done = true;                       // 全タイプ共通の1つ目
+  const s2 = A.carrySteps(s1, 'teach');
+  eq(s2.reduce((n,c)=>n+c.items.length,0), 9);
+  ok(s2[0].items[0].done, '共通のやることが引き継がれていない');
+});
+t('保存データの答えと段階が復元される', () => {
+  const a = {}; A.QALL(false).forEach(q => a[q.k] = 3);
+  const c = A.cleanProfile({ name:'x', answers:a, depth:'core',
+    result:{type:'content',traits:{},styles:{}} });
+  eq(Object.keys(c.answers).length, 17); eq(c.depth, 'core');
+});
+t('壊れた答えは捨てられる', () => {
+  const c = A.cleanProfile({ name:'x', answers:{ t0:9, t2:'abc', t4:3, zzz:2 }, depth:'変な値' });
+  eq(c.answers, { t4:3 }); eq(c.depth, 'core');
 });
 
 /* ================= 結果 ================= */
