@@ -166,3 +166,31 @@ cd ~/StrengthPath && python3 -m http.server 8123
 
 **保存データは端末ごとに独立しています。** 渡した相手のデータがこちらに見えることはなく、
 逆にこちらから相手の進捗を確認することもできません。
+
+---
+
+## 公開
+
+GitHub Pages で公開しています。
+
+- **URL**: https://karasui1014.github.io/strengthpath/
+- リポジトリのルートをそのまま配信（`main` ブランチ）
+- `.nojekyll` を置いてJekyll処理を止めています（`_` で始まるファイルが無視されるのを防ぐため）
+- `robots.txt` と `noindex` で検索結果には出しません
+
+### 更新のしかた
+
+```bash
+cd ~/StrengthPath
+node tests/run.js          # 先にテスト
+# sw.js の CACHE のバージョンを上げる ← 忘れると反映されない
+git add -A && git commit -m "..." && git push
+```
+
+反映まで1〜2分かかります。**`sw.js` の `CACHE` を上げ忘れると、
+一度開いた人の画面が古いまま**なので必ず上げてください。
+
+### 注意
+
+リポジトリは公開です（無料プランのPagesは公開必須）。ソースは誰でも読めます。
+検索には出ませんが、**URLを知っている人は誰でも開けます**。
