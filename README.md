@@ -176,7 +176,7 @@ GitHub Pages で公開しています。
 - **URL**: https://karasui1014.github.io/strengthpath/
 - リポジトリのルートをそのまま配信（`main` ブランチ）
 - `.nojekyll` を置いてJekyll処理を止めています（`_` で始まるファイルが無視されるのを防ぐため）
-- `robots.txt` と `noindex` で検索結果には出しません
+- 各HTMLの `<meta name="robots" content="noindex, nofollow, noarchive">` で検索結果に出ないようにしています
 
 ### 更新のしかた
 
@@ -194,3 +194,9 @@ git add -A && git commit -m "..." && git push
 
 リポジトリは公開です（無料プランのPagesは公開必須）。ソースは誰でも読めます。
 検索には出ませんが、**URLを知っている人は誰でも開けます**。
+
+**robots.txt について。** `/strengthpath/robots.txt` に置いてありますが、
+robots.txt はドメイン直下にあるものしかクローラーが読まないため、**この場所では効きません**。
+実際に検索避けとして働いているのは各HTMLの `noindex` メタタグのほうです。
+ドメイン直下（`karasui1014.github.io/robots.txt`）は現在404で、
+そこを押さえるには `karasui1014.github.io` という名前のリポジトリが別途必要になります。
