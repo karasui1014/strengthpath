@@ -23,7 +23,7 @@ const FILES = ['assets/data.js','assets/akari.js','assets/app.js'];
 vm.runInContext(FILES.map(read).join('\n') + `
 ;globalThis.API = { scoreGate, scoreAll, matchJobs, buildSteps, blankProfile, makePrompt,
   flat, nextStep, doneCount, totalCount, timesMoved, ymd, today, cleanStore, cleanProfile,
-  QALL, CORE_COUNT, EXTRA_COUNT, carrySteps,
+  QALL, CORE_COUNT, EXTRA_COUNT, carrySteps, navHtml, vHome, vClues, vJobs, vBook, vBuddy, P,
   TRAITS, STYLES, TYPES, JOBS, JOB_CATS, GATES, CHAPTERS, PROMPTS, THEMES, VOICE,
   Q_GATE, Q_TRAIT, Q_STYLE, SCALE, OTHER_WAYS, COMMON_STEPS, TYPE_STEPS, LEARN_LINK, MONEY_NOTE };`,
   ctx, { filename:'bundle.js' });
@@ -468,6 +468,50 @@ t('保存データの答えと段階が復元される', () => {
 t('壊れた答えは捨てられる', () => {
   const c = A.cleanProfile({ name:'x', answers:{ t0:9, t2:'abc', t4:3, zzz:2 }, depth:'変な値' });
   eq(c.answers, { t4:3 }); eq(c.depth, 'core');
+});
+
+
+/* ================= 12. 触りはじめの導線 ================= */
+group('12. こたえる前の画面（行き止まりを作らない）');
+const strip = h => h.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+const fresh = () => A.blankProfile('あなた');
+
+const tabCount = () => (A.navHtml().match(/nav-btn/g) || []).length;
+t('こたえる前のタブは2つだけ', () => {
+  const p = A.P(); p.result = null;
+  eq(tabCount(), 2, '押しても何も無いタブが並んでいる');
+  return 'ホーム・しごと';
+});
+t('こたえたあとはタブが5つになる', () => {
+  const p = A.P(); p.result = quiz(fill(24,3));
+  const n = tabCount(); p.result = null;
+  eq(n, 5, 'こたえたのにタブが増えていない');
+});
+[['もちあじ', A.vClues, '持ち味'], ['きろく', A.vBook, '記録'], ['そうだん', A.vBuddy, 'AI']].forEach(([name, fn, word]) => {
+  t(`${name}は、こたえる前でも何が出るか説明する`, () => {
+    const txt = strip(fn(fresh()));
+    ok(txt.length > 40, `短すぎる（${txt.length}字）— 行き止まりになっている`);
+    ok(!txt.includes('まだ、はじめていませんね'), '突き放す文言が残っている');
+    ok(txt.includes('こたえる') || txt.includes('見てみる'), '次にできることが示されていない');
+    return `${txt.length}字`;
+  });
+});
+t('しごとは、こたえなくても20コぜんぶ読める', () => {
+  const txt = strip(A.vJobs(fresh()));
+  A.JOBS.forEach(j => ok(txt.includes(j.name), `${j.name} が出ていない`));
+  return `${A.JOBS.length}コすべて表示`;
+});
+t('こたえる前のどの画面からも、次に進む手がある', () => {
+  [['ホーム', A.vHome], ['もちあじ', A.vClues], ['しごと', A.vJobs],
+   ['きろく', A.vBook], ['そうだん', A.vBuddy]].forEach(([name, fn]) => {
+    const h = fn(fresh());
+    ok(/data-nav="gate"|data-nav="jobs"/.test(h), `${name} に進む手がない`);
+  });
+});
+t('こたえる前の画面に、問題数と所要時間が書いてある', () => {
+  const h = A.vHome(fresh()) + A.vJobs(fresh()) + A.vClues(fresh());
+  ok(h.includes(String(A.CORE_COUNT)), '問題数が書かれていない');
+  ok(h.includes('2分') || h.includes('3秒'), '所要時間の目安がない');
 });
 
 /* ================= 結果 ================= */

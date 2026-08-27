@@ -347,3 +347,8 @@ h1, h2, h3, p, li, summary,
 /* 手が止まった日に、はじめた理由を添える */
 .sheet-why{font-size:13px;color:var(--dim);background:var(--soft);
   border-radius:10px;padding:10px 13px;margin-top:12px;line-height:1.7}
+
+/* こたえる前に、しごと一覧から自然に誘導するための囲み */
+.nudge{border-left:3px solid var(--acc);margin-bottom:14px}
+.nudge p{font-size:14px}
+.nudge .btn{margin-top:4px}

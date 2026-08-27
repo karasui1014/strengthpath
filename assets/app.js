@@ -234,8 +234,12 @@ function topHtml(p) {
     <button class="icobtn" data-nav="settings" aria-label="設定">⚙</button>`;
 }
 function navHtml() {
-  const items = [['home', '🏠', 'ホーム'], ['clues', '✨', 'もちあじ'],
-                 ['jobs', '🧰', 'しごと'], ['book', '📓', 'きろく'], ['buddy', '💬', 'そうだん']];
+  /* 結果が出るまでは、中身のあるタブだけ出す。
+     押しても何も無いタブが並んでいると、選ぶ手間だけが増えるため。 */
+  const items = P().result
+    ? [['home', '🏠', 'ホーム'], ['clues', '✨', 'もちあじ'],
+       ['jobs', '🧰', 'しごと'], ['book', '📓', 'きろく'], ['buddy', '💬', 'そうだん']]
+    : [['home', '🏠', 'ホーム'], ['jobs', '🧰', 'しごと']];
   if (S.mode === 'coach') items.push(['people', '👥', 'みんな']);
   return items.map(([v, i, l]) =>
     `<button class="nav-btn${view === v ? ' on' : ''}" data-nav="${v}"><span>${i}</span>${l}</button>`).join('');
@@ -284,6 +288,7 @@ function vWelcome() {
       あとは<b>どこから手をつけるか</b>だけ。
       まず<b>いまの状況を4問</b>だけ聞いて、そのうえで持ち味を見ていきます。</p>
       <button class="btn xl" data-nav="gate">はじめる</button>
+      <button class="btn link" data-nav="jobs">こたえずに、副業20コだけ見てみる</button>
       <ul class="easy">
         <li>ぜんぶで${CORE_COUNT}問。1問3秒、指1本でOK</li>
         <li>途中でやめても、続きから始められます</li>
@@ -341,7 +346,7 @@ function vQuiz(p) {
 
 /* ========== もちあじ（結果） ========== */
 function vClues(p) {
-  if (!p.result) return notyet();
+  if (!p.result) return notyet('こたえると、ここにあなたの持ち味が出ます。');
   const r = p.result, t = TYPES[r.type];
   const top = rank(r.traits).slice(0, 5);
   const style = STYLES[rank(r.styles)[0][0]];
@@ -392,9 +397,10 @@ function vClues(p) {
     <button class="btn link wide" data-retake="1">もう一度やってみる</button>
     <button class="btn link wide" data-regate="1">いまの状況を聞き直す</button>`;
 }
-const notyet = () => `<div class="welcome">${akariTag('think', 110)}
-    <div class="hi">まだ、はじめていませんね。</div>
-    <button class="btn xl" data-nav="gate">3分ではじめる</button></div>`;
+const notyet = (what) => `<div class="welcome">${akariTag('normal', 110)}
+    <div class="hi">${esc(what || 'ここには、あなたに合わせた内容が出ます。')}</div>
+    <button class="btn xl" data-nav="gate">${CORE_COUNT}問こたえる（2分）</button>
+    <button class="btn link" data-nav="jobs">先に、副業だけ見てみる</button></div>`;
 
 
 /* ========== 適性チェック（8問） ========== */
@@ -482,7 +488,12 @@ function vJobs(p) {
   const topIds = matched ? matched.slice(0, 3).map(m => m.job.id) : [];
   return `${p.result
       ? say('あなたの持ち味に近い順に並べました。上の3つは特に相性がいいです。', 'happy')
-      : say('20コあります。持ち味を調べると、合う順に並びかえられます。', 'normal')}
+      : say('20コあります。気になるものを開いて読むだけでも大丈夫です。', 'normal')}
+    ${p.result ? '' : `<div class="soft nudge">
+      <p>${CORE_COUNT}問こたえると、<b>この20コがあなたに近い順に並びかえられます。</b>
+      合う3つには印がつきます。</p>
+      <button class="btn ghost" data-nav="gate">${CORE_COUNT}問こたえる（2分）</button>
+    </div>`}
     <div class="cats">
       <button class="cat${jobCat === 'all' ? ' on' : ''}" data-jcat="all">ぜんぶ</button>
       ${Object.entries(JOB_CATS).map(([k, c]) =>
@@ -512,7 +523,7 @@ function vJobs(p) {
 
 /* ========== 手帳 ========== */
 function vBook(p) {
-  if (!p.result) return notyet();
+  if (!p.result) return notyet('動いた記録が、ここに増えていきます。');
   const ns = nextStep(p), ch = ns ? CHAPTERS[ns.ci] : null;
   return `<div class="big-card">
       <div class="mini">${ns ? esc(ch.no) + '・' + esc(ch.title) : 'ぜんぶ終わりました'}　${doneCount(p)}/${totalCount(p)}</div>
@@ -552,7 +563,7 @@ function vBook(p) {
 
 /* ========== そうだん（AI） ========== */
 function vBuddy(p) {
-  if (!p.result) return notyet();
+  if (!p.result) return notyet('結果が出ると、AIに相談する文章をここで作れます。');
   const list = PROMPTS.filter(x => S.mode === 'coach' || x.id !== 'coach');
   return `${say('話してみましょうか。私の見立ても、そのまま渡しますね。', 'normal')}
     <div class="soft">
