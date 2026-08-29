@@ -152,6 +152,15 @@ ul.popts li::before{content:none !important}
 ul.popts li{background:var(--quiet);border-radius:7px;padding:7px 11px;font-size:13.5px}
 ul.popts li:first-child,ul.popts li:last-child{font-weight:700;background:var(--card);
   border:1px solid var(--line)}
+
+.howto ol{counter-reset:hs;list-style:none;display:grid;gap:7px;margin-top:8px}
+.howto li{counter-increment:hs;padding-left:28px;position:relative}
+.howto li::before{content:counter(hs);position:absolute;left:0;top:2px;width:19px;height:19px;
+  border-radius:50%;background:var(--acc);color:#fff;font-size:10.5px;font-weight:800;
+  display:grid;place-items:center}
+.howto li b{display:block;font-size:13.5px;line-height:1.6}
+.howto li span{display:block;font-size:12px;color:var(--dim);line-height:1.7}
+.howto{background:var(--quiet);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin:11px 0}
 @media print{ nav.toc{display:none} .wrap{grid-template-columns:1fr} section{break-inside:avoid} }
 </style>
 
@@ -167,7 +176,7 @@ ul.popts li:first-child,ul.popts li:last-child{font-weight:700;background:var(--
     <span>AI文章 5種</span>
   </div>
 </header>
-<nav class="toc"><a href="#gate"><span>①</span>適性チェック（必須3問）</a><a href="#other"><span>②</span>副業以外の道</a><a href="#quiz"><span>③</span>設問（必須10問）</a><a href="#traits"><span>④</span>12の持ち味</a><a href="#styles"><span>⑤</span>5つの進みグセ</a><a href="#types"><span>⑥</span>8つの向いてる道</a><a href="#jobs"><span>⑦</span>副業カタログ（20コ）</a><a href="#steps"><span>⑧</span>9つのやること</a><a href="#voice"><span>⑨</span>キャラクターのひとこと</a><a href="#prompts"><span>⑩</span>AIに渡す文章（5種）</a></nav>
+<nav class="toc"><a href="#gate"><span>①</span>適性チェック（必須3問）</a><a href="#reality"><span>②</span>先に、正直なところを</a><a href="#other"><span>③</span>副業以外の道</a><a href="#quiz"><span>④</span>設問（必須10問）</a><a href="#traits"><span>⑤</span>12の持ち味</a><a href="#styles"><span>⑥</span>5つの進みグセ</a><a href="#types"><span>⑦</span>8つの向いてる道</a><a href="#jobs"><span>⑧</span>副業カタログ（20コ）</a><a href="#steps"><span>⑨</span>9つのやること</a><a href="#report"><span>⑩</span>報告と応援</a><a href="#voice"><span>⑪</span>キャラクターのひとこと</a><a href="#prompts"><span>⑫</span>AIに渡す文章（5種）</a></nav>
 <main>
 <section id="gate">
 <h2><span class="num">①</span>適性チェック（必須3問）</h2>
@@ -188,8 +197,12 @@ ul.popts li:first-child,ul.popts li:last-child{font-weight:700;background:var(--
 <p>同じ「お金を増やす」でも、時間をほとんど使わない方法があります。まずはこちらのほうが、効率がいいことが多いです。</p>
 
 <p class="cta">ボタン：それでも副業を見てみる</p></div>
+</section><section id="reality">
+<h2><span class="num">②</span>先に、正直なところを</h2>
+<p class="lead">甘い期待のまま始めると、思っていたのと違うところで折れます。実際の調査データを見せたうえで、<b>必ず「だからこうする」までセットで書きます</b>。脅すためのページではありません。</p>
+<div class="grid"><div class="card"><h3>3万円</h3><p class="catch">副業で得ている月収の中央値</p><p>平均は5.4万円ですが、いちばん多い層は月1万円です。最初から大きくは動きません。</p></div><div class="card"><h3>約半分</h3><p class="catch">理想と実際の差</p><p>みんなが望む額は月10.8万円。実際に得ているのは平均5.4万円で、だいたい半分です。</p></div><div class="card"><h3>43.4%</h3><p class="catch">「労力に見合わないかも」と不安に思う人</p><p>いちばん多い不安です。時間をかけた割に、という感覚は誰にでも起きます。</p></div></div><h3 class="sub">やめてしまう理由は、能力ではなく体力</h3><ul class="picks"><li>本業でヘトヘトになって、副業どころではなくなった</li><li>納期が重なって睡眠時間が削られ、体調を崩した</li><li>本業との両立が、物理的に無理だった</li></ul><p class="note">どれも「才能がなかった」ではありません。時間の設計を間違えると、誰でもこうなります。</p><h3 class="sub">だから、こうしておく</h3><div class="grid"><div class="card"><h3>最初の3ヶ月は「稼ぐ」を目標にしない</h3><p>「1件出す」「1人に見せる」を目標にする。金額を目標にすると、出ない月に心が折れます。</p></div><div class="card"><h3>本業の疲れを削らない範囲で決める</h3><p>週に使える時間を先に決めて、それ以上はやらない。倒れたら全部止まります。</p></div><div class="card"><h3>月1万円をまず取りにいく</h3><p>いちばん多い層がそこです。3万円は、その先にあります。</p></div></div><p class="note">出典：Job総研「2025年 副業・兼業の実態調査」（副業経験者140人・全体357人）ほか</p>
 </section><section id="other">
-<h2><span class="num">②</span>副業以外の道</h2>
+<h2><span class="num">③</span>副業以外の道</h2>
 <p class="lead">「いまは、副業より効くことがあります」と出た人に見せる画面。<b>否定はせず</b>、時間を使わない方法を先に紹介します。</p>
 <div class="card">
 <h3>📄 固定費を見直す</h3>
@@ -205,11 +218,11 @@ ul.popts li:first-child,ul.popts li:last-child{font-weight:700;background:var(--
 <p class="url">https://www.youtube.com/results?search_query=%E3%83%AA%E3%83%99%E3%83%A9%E3%83%AB%E3%82%A2%E3%83%BC%E3%83%84%E5%A4%A7%E5%AD%A6</p>
 <p class="note">※ 本ツールは情報の紹介であり、投資助言や特定の金融商品の推奨ではありません。判断はご自身で行ってください。</p></div>
 </section><section id="quiz">
-<h2><span class="num">③</span>設問（必須10問）</h2>
+<h2><span class="num">④</span>設問（必須10問）</h2>
 <p class="lead"><b>1問で2つの持ち味を同時に測ります。</b>選択肢そのものを完結した文にしているので、A・Bのラベルを覚え直す必要がありません。どちらを選んでも否定にならない対にしてあります。上を選べば下は反対の値になるので、1タップが2種ぶんの答えになります。</p>
 <h3 class="sub">どっち寄り？　前半6問<span class="goal">必須。12種すべてが1回ずつ出る</span></h3><ol class="qs pairs" start="1"><li><ul class="popts"><li>まず試してみる</li><li>どちらかといえば、試すほう</li><li>どちらかといえば、調べるほう</li><li>まず調べてみる</li></ul><span class="pw">みきり ↔ しらべ</span></li><li><ul class="popts"><li>決めたことを、最後までやる</li><li>どちらかといえば、最後までやるほう</li><li>どちらかといえば、次々やるほう</li><li>新しいことを、次々にやる</li></ul><span class="pw">やりきり ↔ わくわく</span></li><li><ul class="popts"><li>数字や事実で決める</li><li>どちらかといえば、数字で決めるほう</li><li>どちらかといえば、気持ちで決めるほう</li><li>相手の気持ちで決める</li></ul><span class="pw">みぬき ↔ きづき</span></li><li><ul class="popts"><li>段取りを組み立てる</li><li>どちらかといえば、段取りを組むほう</li><li>どちらかといえば、思いつきでやるほう</li><li>思いついたことをやる</li></ul><span class="pw">えがき ↔ ひらめき</span></li><li><ul class="popts"><li>早く人に伝えたい</li><li>どちらかといえば、早く伝えるほう</li><li>どちらかといえば、じっくり整えるほう</li><li>納得いくまで整えたい</li></ul><span class="pw">つたえ ↔ こだわり</span></li><li><ul class="popts"><li>人の役に立ちたい</li><li>どちらかといえば、人の役に立つほう</li><li>どちらかといえば、自分で作るほう</li><li>自分で作りたい</li></ul><span class="pw">ささえ ↔ かたち</span></li></ol><h3 class="sub">どっち寄り？　後半6問<span class="goal">追加。同じ12種を別の組み合わせで</span></h3><ol class="qs pairs" start="7"><li><ul class="popts"><li>動きながら考える</li><li>どちらかといえば、動きながら考えるほう</li><li>どちらかといえば、考えてから動くほう</li><li>考えてから動く</li></ul><span class="pw">みきり ↔ えがき</span></li><li><ul class="popts"><li>ひとつを続ける</li><li>どちらかといえば、続けるほう</li><li>どちらかといえば、次々出すほう</li><li>アイデアを次々出す</li></ul><span class="pw">やりきり ↔ ひらめき</span></li><li><ul class="popts"><li>新しさを取りにいく</li><li>どちらかといえば、新しさのほう</li><li>どちらかといえば、質のほう</li><li>質を上げにいく</li></ul><span class="pw">わくわく ↔ こだわり</span></li><li><ul class="popts"><li>こまかく分析する</li><li>どちらかといえば、分析するほう</li><li>どちらかといえば、伝えるほう</li><li>どんどん伝える</li></ul><span class="pw">みぬき ↔ つたえ</span></li><li><ul class="popts"><li>ひとつを深く知る</li><li>どちらかといえば、深く知るほう</li><li>どちらかといえば、人を助けるほう</li><li>目の前の人を助ける</li></ul><span class="pw">しらべ ↔ ささえ</span></li><li><ul class="popts"><li>人をよく見ている</li><li>どちらかといえば、人を見るほう</li><li>どちらかといえば、ものを作るほう</li><li>ものをよく作っている</li></ul><span class="pw">きづき ↔ かたち</span></li></ol><h3 class="sub">進みグセ<span class="goal">5つから1つ選ぶだけ</span></h3><h4 class="pickq">何かを始めるとき、自分に近いのはどれですか（必須）</h4><ul class="picks"><li><span class="tag t-style">こだわり型</span>ちゃんと整えてから出したい</li><li><span class="tag t-style">目移り型</span>やってみたいことが、いくつも浮かぶ</li><li><span class="tag t-style">ていねい型</span>自分より詳しい人のことが気になる</li><li><span class="tag t-style">のんびり型</span>無理に自分を追い立てたくない</li><li><span class="tag t-style">マイペース型</span>ひとりで進めるほうが集中できる</li></ul><h4 class="pickq">手が止まるとしたら、どれが近いですか（追加）</h4><ul class="picks"><li><span class="tag t-style">こだわり型</span>中途半端なものを見せたくない</li><li><span class="tag t-style">目移り型</span>新しいやり方を知ると、そっちも良く見える</li><li><span class="tag t-style">ていねい型</span>人前に出すとき、失礼がないか気になる</li><li><span class="tag t-style">のんびり型</span>疲れている日は、休むほうを選ぶ</li><li><span class="tag t-style">マイペース型</span>人に報告する習慣が、いまは無い</li></ul>
 </section><section id="traits">
-<h2><span class="num">④</span>12の持ち味</h2>
+<h2><span class="num">⑤</span>12の持ち味</h2>
 <p class="lead">上位5つを結果画面に出します。<b>弱点は一切書きません</b>。「効くところ」と「そのままラクに進む方法」だけです。</p>
 <div class="grid"><div class="card">
 <h3>みきり<span class="cat">🚶 すすむ力</span></h3>
@@ -261,7 +274,7 @@ ul.popts li:first-child,ul.popts li:last-child{font-weight:700;background:var(--
 <dl class="rows"><dt>強み</dt><dd>出すものに一貫した空気がある人です。「この人らしさ」で覚えてもらえるので、価格を上げやすいタイプです。<span class="len">51</span></dd><dt>効くところ</dt><dd>世界観を作る／ブランドを育てる／質で選ばれる<span class="len">22</span></dd><dt>ラクに進む方法</dt><dd>あなたの70点は、たいてい他の人の90点です。そこで出しても、ちゃんと通用します。<span class="len">41</span></dd></dl>
 </div></div>
 </section><section id="styles">
-<h2><span class="num">⑤</span>5つの進みグセ</h2>
+<h2><span class="num">⑥</span>5つの進みグセ</h2>
 <p class="lead">もともと「ブレーキ」だったものを、<b>すべて肯定形に言い換えた</b>ものです。完璧主義→こだわり型、選択肢過多→目移り型、というように。</p>
 <div class="grid"><div class="card">
 <h3>💎 こだわり型</h3>
@@ -285,7 +298,7 @@ ul.popts li:first-child,ul.popts li:last-child{font-weight:700;background:var(--
 <dl class="rows"><dt>いいところ</dt><dd>あなたは人に合わせなくても進める人です。これは、まわりに振り回されないという大きな強みです。<span class="len">46</span></dd><dt>ラクに進むコツ</dt><dd>続かないのは意志ではなく、ただ報告先がないだけ。相手はAIでも十分です。<span class="len">36</span></dd><dt>気が乗らない日の3分</dt><dd>週1回の報告先を1つ決めて、今日ぶんを一言送ってみる。<span class="len">27</span></dd><dt>ホームで出る一言</dt><dd>ひとりで進めるあなたに必要なのは、応援じゃなくて、ただの目撃者です。<span class="len">34</span></dd></dl>
 </div></div>
 </section><section id="types">
-<h2><span class="num">⑥</span>8つの向いてる道</h2>
+<h2><span class="num">⑦</span>8つの向いてる道</h2>
 <p class="lead">持ち味の組み合わせから1つを選んで提示します。ここから9つのやることが決まります。</p>
 <div class="grid"><div class="card">
 <h3>📡 伝える道<span class="cat">コンテンツ発信</span></h3>
@@ -345,159 +358,183 @@ ul.popts li:first-child,ul.popts li:last-child{font-weight:700;background:var(--
 <p class="w">効く持ち味：しらべ×3・こだわり×2・みぬき×2・やりきり×1</p>
 </div></div>
 </section><section id="jobs">
-<h2><span class="num">⑦</span>副業カタログ（20コ）</h2>
+<h2><span class="num">⑧</span>副業カタログ（20コ）</h2>
 <p class="lead">分類の枠組みはリベラルアーツ大学「おすすめの副業19選＋番外編」を参考に、<b>解説文と持ち味との対応づけは独自に作成</b>したものです。「正直なところ」には都合の悪い面も書いています。<br><b>お金のこと</b>は、単価・期間・必要な件数・初期費用・売り場を20コすべてに入れています。<br><span class="note">※ 金額はよくある目安で、収入を保証するものではありません。時期・地域・やり方で大きく変わります。</span></p>
 <h3 class="sub">📦 物販<span class="count">3</span></h3><div class="grid"><div class="card">
 <h3>せどり</h3>
 <p class="catch">安く仕入れて、高く売る。中古でも新品でも輸入品でも成り立ちます。</p>
 <div class="yen"><div class="yen-h">お金のこと</div>
 <dl class="rows"><dt>いくらになる</dt><dd>1つ売って手元に残るのは500〜3,000円くらい。仕入れ値の1.5〜2倍で売るのが目安<span class="len">44</span></dd><dt>最初の1円まで</dt><dd>最短で数日。家の不要品を出すだけなら、その日のうちに売れることもあります<span class="len">36</span></dd><dt>月5万円にするなら</dt><dd>利益率20%とすると、月に25万円ぶん売って5万円。1つ1,500円の利益なら月35個くらい<span class="len">46</span></dd><dt>はじめる費用</dt><dd>仕入れ資金が3〜10万円ほど。出品は無料ですが、売れると手数料が10%前後かかります<span class="len">42</span></dd><dt>売る場所</dt><dd>メルカリ / ラクマ / Amazon / ヤフオク<span class="len">26</span></dd></dl></div>
-<dl class="rows"><dt>最初の一歩</dt><dd>家にある使わないものを1つ、フリマアプリに出してみる<span class="len">26</span></dd><dt>いるもの</dt><dd>スマホ / 少額の仕入れ資金 / 置いておく場所<span class="len">24</span></dd><dt>AIの使いどころ</dt><dd>相場調べと出品文の作成は、AIでかなり短くできます。<span class="len">26</span></dd><dt>正直なところ</dt><dd>仕入れのお金が先に出ていきます。生活費とは別のお金ではじめてください。<span class="len">35</span></dd></dl>
+<div class="howto"><div class="yen-h">最初の一歩</div><ol><li><b>家の中から、売れそうなものを3つ選ぶ</b><span>本・ゲーム・使わない家電・ブランド小物。買ったときより高くなくていい</span></li><li><b>メルカリで同じ商品を検索し、「売り切れ」で絞る</b><span>実際に売れた値段だけが本物の相場。出品中の値段は参考になりません</span></li><li><b>明るい場所で写真を5枚撮る</b><span>1枚目は全体、あとは型番・傷・付属品。傷を隠さないほうがトラブルが減ります</span></li><li><b>売り切れの相場より少し安く出す</b><span>最初は評価がゼロなので、値段でしか勝てません</span></li><li><b>売れたら、利益をノートに書く</b><span>仕入れ0円のうちに、送料と手数料10%が引かれる感覚をつかんでおく</span></li></ol></div>
+<dl class="rows"><dt>いるもの</dt><dd>スマホ / 少額の仕入れ資金 / 置いておく場所<span class="len">24</span></dd><dt>AIの使いどころ</dt><dd>相場調べと出品文の作成は、AIでかなり短くできます。<span class="len">26</span></dd><dt>正直なところ</dt><dd>仕入れのお金が先に出ていきます。生活費とは別のお金ではじめてください。<span class="len">35</span></dd></dl>
 <p class="w">効く持ち味：みぬき×3・みきり×2・やりきり×2</p>
 </div><div class="card">
 <h3>ハンドメイド販売</h3>
 <p class="catch">自分で作ったものを minne や Creema などで売ります。</p>
 <div class="yen"><div class="yen-h">お金のこと</div>
 <dl class="rows"><dt>いくらになる</dt><dd>1点1,000〜5,000円が多い。材料費を引くと手元に残るのは半分くらい<span class="len">37</span></dd><dt>最初の1円まで</dt><dd>出品して数日〜1ヶ月。最初は売れない期間が普通にあります<span class="len">28</span></dd><dt>月5万円にするなら</dt><dd>1点1,500円の利益なら月35点。作る時間がそのまま上限になります<span class="len">34</span></dd><dt>はじめる費用</dt><dd>材料費5,000円〜。出品は無料、売れると手数料10%前後<span class="len">29</span></dd><dt>売る場所</dt><dd>minne / Creema / BASE / メルカリ<span class="len">28</span></dd></dl></div>
-<dl class="rows"><dt>最初の一歩</dt><dd>いま作れるものを1つ、写真を撮って出品してみる<span class="len">23</span></dd><dt>いるもの</dt><dd>材料費 / 作る時間 / 撮影できる明るい場所<span class="len">23</span></dd><dt>AIの使いどころ</dt><dd>商品説明とタグ付けをAIに任せると、出品が速くなります。<span class="len">28</span></dd><dt>正直なところ</dt><dd>ひとつあたりの利益は小さめ。数と単価をどう上げるかが要になります。<span class="len">33</span></dd></dl>
+<div class="howto"><div class="yen-h">最初の一歩</div><ol><li><b>minneに登録する（無料・10分）</b><span>スマホだけで完結します。開設だけなら費用はかかりません</span></li><li><b>いま手元にある作品を1つ選ぶ</b><span>新しく作らない。「売れるか試す」のが目的なので、あるもので十分です</span></li><li><b>白い紙か布の上で、自然光で撮る</b><span>照明は買わなくていい。窓際の午前中がいちばんきれいに写ります</span></li><li><b>似た作品を検索して、価格帯を3つ見る</b><span>材料費の2〜3倍が目安。安すぎると作るほど疲れます</span></li><li><b>説明文に「誰に向けたものか」を1行入れる</b><span>「〇〇な人へ」があるだけで、目に留まりやすくなります</span></li></ol></div>
+<dl class="rows"><dt>いるもの</dt><dd>材料費 / 作る時間 / 撮影できる明るい場所<span class="len">23</span></dd><dt>AIの使いどころ</dt><dd>商品説明とタグ付けをAIに任せると、出品が速くなります。<span class="len">28</span></dd><dt>正直なところ</dt><dd>ひとつあたりの利益は小さめ。数と単価をどう上げるかが要になります。<span class="len">33</span></dd></dl>
 <p class="w">効く持ち味：かたち×3・こだわり×3・やりきり×1</p>
 </div><div class="card">
 <h3>D2C・自社商品販売</h3>
 <p class="catch">自分のブランドで商品を企画し、Shopify や BASE で直接売ります。</p>
 <div class="yen"><div class="yen-h">お金のこと</div>
 <dl class="rows"><dt>いくらになる</dt><dd>粗利率30〜50%が目安。1商品3,000円なら手元に1,000〜1,500円<span class="len">39</span></dd><dt>最初の1円まで</dt><dd>1〜3ヶ月。商品を作って、知ってもらうまでに時間がかかります<span class="len">30</span></dd><dt>月5万円にするなら</dt><dd>粗利40%なら月商12〜15万円。広告を使うならその費用も別に要ります<span class="len">35</span></dd><dt>はじめる費用</dt><dd>初期在庫10〜50万円。ショップ開設はBASEなら0円（売れたとき手数料）<span class="len">37</span></dd><dt>売る場所</dt><dd>BASE / Shopify / STORES<span class="len">23</span></dd></dl></div>
-<dl class="rows"><dt>最初の一歩</dt><dd>売りたい商品を1つ決めて、BASEに無料のショップだけ作ってみる<span class="len">32</span></dd><dt>いるもの</dt><dd>企画する力 / 仕入れか製造のあて / 初期のお金<span class="len">25</span></dd><dt>AIの使いどころ</dt><dd>ブランド名・商品説明・販売ページの下書きは、AIが得意です。<span class="len">30</span></dd><dt>正直なところ</dt><dd>いちばん時間もお金もかかる代わりに、育つと資産になります。<span class="len">29</span></dd></dl>
+<div class="howto"><div class="yen-h">最初の一歩</div><ol><li><b>売りたいものを1つに決める</b><span>複数あると全部が中途半端になります。まず1つ</span></li><li><b>BASEでショップを作る（無料・30分）</b><span>初期費用も月額もかかりません。売れたときだけ手数料がかかります</span></li><li><b>商品ページに「なぜ作ったか」を書く</b><span>大手と同じ土俵では勝てません。理由と人柄が差になります</span></li><li><b>身近な5人に見せて、感想をもらう</b><span>買ってもらわなくていい。「わかりにくい所」を教えてもらうのが目的</span></li><li><b>最初の在庫は、いちばん小さいロットで頼む</b><span>売れる確証がないうちに大量発注しない。ここで詰む人が多いです</span></li></ol></div>
+<dl class="rows"><dt>いるもの</dt><dd>企画する力 / 仕入れか製造のあて / 初期のお金<span class="len">25</span></dd><dt>AIの使いどころ</dt><dd>ブランド名・商品説明・販売ページの下書きは、AIが得意です。<span class="len">30</span></dd><dt>正直なところ</dt><dd>いちばん時間もお金もかかる代わりに、育つと資産になります。<span class="len">29</span></dd></dl>
 <p class="w">効く持ち味：えがき×3・こだわり×2・わくわく×2</p>
 </div></div><h3 class="sub">📡 コンテンツ発信<span class="count">6</span></h3><div class="grid"><div class="card">
 <h3>YouTube</h3>
 <p class="catch">動画を作って公開し、広告やファンからの支援で収益にします。</p>
 <div class="yen"><div class="yen-h">お金のこと</div>
 <dl class="rows"><dt>いくらになる</dt><dd>広告収入は1再生あたり0.1〜0.5円。ジャンルで大きく変わります<span class="len">33</span></dd><dt>最初の1円まで</dt><dd>収益化まで登録者1,000人＋再生4,000時間が要るので、半年〜1年が普通<span class="len">38</span></dd><dt>月5万円にするなら</dt><dd>月15〜50万再生。企業案件が取れると1本3〜30万円で、そちらのほうが大きい<span class="len">39</span></dd><dt>はじめる費用</dt><dd>0円（スマホでも撮れます）。編集ソフトを入れるなら月2,000円前後<span class="len">34</span></dd><dt>売る場所</dt><dd>YouTube<span class="len">7</span></dd></dl></div>
-<dl class="rows"><dt>最初の一歩</dt><dd>3分の動画を1本、スマホで撮って出してみる<span class="len">21</span></dd><dt>いるもの</dt><dd>撮れるスマホ / 編集の時間 / 続ける根気<span class="len">22</span></dd><dt>AIの使いどころ</dt><dd>構成・台本・サムネ案はAIで出せます。編集の自動化も進んでいます。<span class="len">33</span></dd><dt>正直なところ</dt><dd>伸びるまでが長い分野です。最初の30本は反応を見ないと決めておくと楽です。<span class="len">37</span></dd></dl>
+<div class="howto"><div class="yen-h">最初の一歩</div><ol><li><b>スマホで3分の動画を1本撮る</b><span>編集なし・顔出しなしでいい。まず「出す」ことに慣れる</span></li><li><b>タイトルに検索されそうな言葉を入れる</b><span>「〇〇 やり方」「〇〇 初心者」。中身より先に、見つけてもらう入口が要ります</span></li><li><b>サムネイルは文字を6字以内で大きく</b><span>スマホでは小さく表示されます。長い文は読まれません</span></li><li><b>公開したら、そのまま次を撮る</b><span>再生数は最初の30本まで見ない。ここで心が折れる人がいちばん多い</span></li><li><b>10本たまったら、伸びた1本を分析する</b><span>伸びた理由を真似して、次の10本を作る</span></li></ol></div>
+<dl class="rows"><dt>いるもの</dt><dd>撮れるスマホ / 編集の時間 / 続ける根気<span class="len">22</span></dd><dt>AIの使いどころ</dt><dd>構成・台本・サムネ案はAIで出せます。編集の自動化も進んでいます。<span class="len">33</span></dd><dt>正直なところ</dt><dd>伸びるまでが長い分野です。最初の30本は反応を見ないと決めておくと楽です。<span class="len">37</span></dd></dl>
 <p class="w">効く持ち味：つたえ×3・かたち×2・ひらめき×2</p>
 </div><div class="card">
 <h3>ライブ配信</h3>
 <p class="catch">その場で話し、投げ銭やギフトで収益にします。</p>
 <div class="yen"><div class="yen-h">お金のこと</div>
 <dl class="rows"><dt>いくらになる</dt><dd>投げ銭。時給に直すと500〜3,000円くらいの幅<span class="len">25</span></dd><dt>最初の1円まで</dt><dd>1〜2週間。配信したその日に投げ銭がつくこともあります<span class="len">27</span></dd><dt>月5万円にするなら</dt><dd>週4〜5日、1日2時間くらいが目安。応援してくれる人が数人つくかどうかで変わります<span class="len">41</span></dd><dt>はじめる費用</dt><dd>0円。照明とマイクを足すなら1万円ほど<span class="len">19</span></dd><dt>売る場所</dt><dd>17LIVE / ふわっち / TikTok LIVE / YouTube<span class="len">37</span></dd></dl></div>
-<dl class="rows"><dt>最初の一歩</dt><dd>30分だけ配信してみる。誰も来なくても1回やってみる<span class="len">26</span></dd><dt>いるもの</dt><dd>話せる時間帯 / スマホかPC<span class="len">15</span></dd><dt>AIの使いどころ</dt><dd>企画のネタ出しや、切り抜き動画づくりに使えます。<span class="len">24</span></dd><dt>正直なところ</dt><dd>編集がいらないぶん始めやすく、そのぶん拘束時間は長めです。<span class="len">29</span></dd></dl>
+<div class="howto"><div class="yen-h">最初の一歩</div><ol><li><b>配信アプリを1つ入れる（17LIVE等・無料）</b><span>どれでも構いません。悩む時間がもったいない</span></li><li><b>曜日と時間を決める</b><span>「毎週火・木の22時」のように固定する。来る人は時間で覚えます</span></li><li><b>30分だけ配信する</b><span>誰も来なくても構いません。話し慣れることが目的です</span></li><li><b>話す内容を3つメモしてから始める</b><span>沈黙が怖いのは準備不足のとき。3つあれば30分もちます</span></li><li><b>来てくれた人の名前を必ず呼ぶ</b><span>これだけでリピート率が変わります</span></li></ol></div>
+<dl class="rows"><dt>いるもの</dt><dd>話せる時間帯 / スマホかPC<span class="len">15</span></dd><dt>AIの使いどころ</dt><dd>企画のネタ出しや、切り抜き動画づくりに使えます。<span class="len">24</span></dd><dt>正直なところ</dt><dd>編集がいらないぶん始めやすく、そのぶん拘束時間は長めです。<span class="len">29</span></dd></dl>
 <p class="w">効く持ち味：つたえ×3・きづき×2・わくわく×2</p>
 </div><div class="card">
 <h3>SNS発信・運用</h3>
 <p class="catch">SNSで発信を続け、集まった人を収益につなげます。</p>
 <div class="yen"><div class="yen-h">お金のこと</div>
 <dl class="rows"><dt>いくらになる</dt><dd>フォロワー1万人でPR案件1件1〜5万円が目安。自分の商品を売るなら青天井<span class="len">37</span></dd><dt>最初の1円まで</dt><dd>3〜6ヶ月。人が集まるまでは0円の期間が続きます<span class="len">24</span></dd><dt>月5万円にするなら</dt><dd>フォロワー5,000〜1万人が一つの線。案件2〜3件、または自分の商品を月20〜30本<span class="len">43</span></dd><dt>はじめる費用</dt><dd>0円。画像を作るツールを入れるなら月1,000〜2,000円<span class="len">30</span></dd><dt>売る場所</dt><dd>X / Instagram / TikTok / Threads<span class="len">32</span></dd></dl></div>
-<dl class="rows"><dt>最初の一歩</dt><dd>プロフィールを一行だけ書き直して、今週3本出す<span class="len">23</span></dd><dt>いるもの</dt><dd>アカウント / 続ける習慣<span class="len">13</span></dd><dt>AIの使いどころ</dt><dd>ネタ出しから下書き、画像づくりまで。いちばんAIが効く分野です。<span class="len">32</span></dd><dt>正直なところ</dt><dd>無料ではじめられるぶん、人も多い分野。テーマを絞れるかどうかで決まります。<span class="len">37</span></dd></dl>
+<div class="howto"><div class="yen-h">最初の一歩</div><ol><li><b>発信する場所を1つだけ決める</b><span>X・Instagram・TikTokから1つ。同時にやると全部が薄くなります</span></li><li><b>プロフィールの1行目を書き直す</b><span>「誰に、何を届ける人か」。肩書きより、読む人の得になることを書く</span></li><li><b>自分が答えられる質問を10個書き出す</b><span>ネタ切れの正体は、テーマが決まっていないこと</span></li><li><b>その10個を1つずつ投稿する</b><span>1日1つ。反応は最初の30本まで見ない</span></li><li><b>反応が良かった1本を、形を変えて出し直す</b><span>当たったネタは何度出してもいい。全部を新作にしなくていい</span></li></ol></div>
+<dl class="rows"><dt>いるもの</dt><dd>アカウント / 続ける習慣<span class="len">13</span></dd><dt>AIの使いどころ</dt><dd>ネタ出しから下書き、画像づくりまで。いちばんAIが効く分野です。<span class="len">32</span></dd><dt>正直なところ</dt><dd>無料ではじめられるぶん、人も多い分野。テーマを絞れるかどうかで決まります。<span class="len">37</span></dd></dl>
 <p class="w">効く持ち味：つたえ×3・ひらめき×2・きづき×1</p>
 </div><div class="card">
 <h3>SNS構築・運用代行</h3>
 <p class="catch">企業や個人のアカウントを設計して運用し、集客や売上に貢献します。</p>
 <div class="yen"><div class="yen-h">お金のこと</div>
 <dl class="rows"><dt>いくらになる</dt><dd>1アカウントの運用で月3〜10万円。投稿だけなら1本1,000〜3,000円<span class="len">38</span></dd><dt>最初の1円まで</dt><dd>1〜2ヶ月。自分のアカウントの数字を見せられると早くなります<span class="len">30</span></dd><dt>月5万円にするなら</dt><dd>1〜2社と契約すれば届きます。継続契約になりやすいのが利点<span class="len">29</span></dd><dt>はじめる費用</dt><dd>0円。予約投稿ツールを使うなら月1,000〜3,000円<span class="len">28</span></dd><dt>売る場所</dt><dd>クラウドワークス / ランサーズ / 知人からの紹介<span class="len">26</span></dd></dl></div>
-<dl class="rows"><dt>最初の一歩</dt><dd>まず自分のアカウントを1つ育てて、数字のスクショを残す<span class="len">27</span></dd><dt>いるもの</dt><dd>自分の実績 / こまめな報告<span class="len">14</span></dd><dt>AIの使いどころ</dt><dd>投稿づくりと分析レポートを任せると、受けられる件数が増えます。<span class="len">31</span></dd><dt>正直なところ</dt><dd>自分の実績がそのまま営業材料になります。先に自分でやるのが近道です。<span class="len">34</span></dd></dl>
+<div class="howto"><div class="yen-h">最初の一歩</div><ol><li><b>自分のアカウントを3ヶ月育てる</b><span>これが唯一の営業材料になります。実績ゼロでは受注できません</span></li><li><b>伸びた数字のスクショを撮っておく</b><span>フォロワー推移・インプレッション。あとから撮り直せません</span></li><li><b>できることを3つに絞って書き出す</b><span>「投稿作成のみ」「分析込み」「コメント返信まで」。範囲を決めないと消耗します</span></li><li><b>クラウドワークスで運用代行の募集を10件見る</b><span>相場と求められる作業量が分かります</span></li><li><b>身近な個人事業主に、1ヶ月無料で提案する</b><span>最初の1件は実績目的。ただし「1ヶ月だけ」と期限を切ること</span></li></ol></div>
+<dl class="rows"><dt>いるもの</dt><dd>自分の実績 / こまめな報告<span class="len">14</span></dd><dt>AIの使いどころ</dt><dd>投稿づくりと分析レポートを任せると、受けられる件数が増えます。<span class="len">31</span></dd><dt>正直なところ</dt><dd>自分の実績がそのまま営業材料になります。先に自分でやるのが近道です。<span class="len">34</span></dd></dl>
 <p class="w">効く持ち味：やりきり×3・みぬき×2・つたえ×2</p>
 </div><div class="card">
 <h3>ブログ・アフィリエイト</h3>
 <p class="catch">自分のメディアを育て、紹介した商品やサービスから報酬を得ます。</p>
 <div class="yen"><div class="yen-h">お金のこと</div>
 <dl class="rows"><dt>いくらになる</dt><dd>1件成約で500〜10,000円。広告クリック型なら1万PVで3,000〜1万円<span class="len">40</span></dd><dt>最初の1円まで</dt><dd>3〜6ヶ月。書いてすぐは検索に出てこないので、無収入の期間が長めです<span class="len">34</span></dd><dt>月5万円にするなら</dt><dd>月1〜3万PVが目安。ジャンルの単価で必要なPVは大きく変わります<span class="len">33</span></dd><dt>はじめる費用</dt><dd>サーバー＋ドメインで年1〜1.5万円。noteだけなら0円<span class="len">29</span></dd><dt>売る場所</dt><dd>WordPress / note / A8.net などのASP<span class="len">32</span></dd></dl></div>
-<dl class="rows"><dt>最初の一歩</dt><dd>いちばん詳しいテーマで、記事を1本書いてみる<span class="len">22</span></dd><dt>いるもの</dt><dd>ドメイン代くらい / 書く時間<span class="len">15</span></dd><dt>AIの使いどころ</dt><dd>構成・調べもの・推敲に使えます。中身の独自性が生死を分けます。<span class="len">31</span></dd><dt>正直なところ</dt><dd>育つまで時間がかかる代わりに、育てば放っておいても動きます。<span class="len">30</span></dd></dl>
+<div class="howto"><div class="yen-h">最初の一歩</div><ol><li><b>自分が3年前に知りたかったことを10個書く</b><span>これがそのまま記事のネタになります</span></li><li><b>無料のnoteで1本書いてみる</b><span>いきなりサーバーを借りない。書き続けられるか先に確かめる</span></li><li><b>1本3,000字を目安にする</b><span>短すぎると検索に出ません。書けるかどうかがここで分かります</span></li><li><b>10本書けたら、WordPressに移す</b><span>年1万円ほど。10本書けない人が大半なので、その前に払わなくていい</span></li><li><b>ASPに登録して、紹介できる商品を探す</b><span>A8.netなど。記事が先、広告は後です</span></li></ol></div>
+<dl class="rows"><dt>いるもの</dt><dd>ドメイン代くらい / 書く時間<span class="len">15</span></dd><dt>AIの使いどころ</dt><dd>構成・調べもの・推敲に使えます。中身の独自性が生死を分けます。<span class="len">31</span></dd><dt>正直なところ</dt><dd>育つまで時間がかかる代わりに、育てば放っておいても動きます。<span class="len">30</span></dd></dl>
 <p class="w">効く持ち味：しらべ×3・つたえ×2・やりきり×2</p>
 </div><div class="card">
 <h3>WEBライティング</h3>
 <p class="catch">依頼を受けて記事や台本を書きます。単発でも継続でも受けられます。</p>
 <div class="yen"><div class="yen-h">お金のこと</div>
 <dl class="rows"><dt>いくらになる</dt><dd>文字単価0.5〜3円。3,000字の記事で1,500〜9,000円<span class="len">33</span></dd><dt>最初の1円まで</dt><dd>1〜2週間。応募して受注できれば、その月に入金があります<span class="len">28</span></dd><dt>月5万円にするなら</dt><dd>単価1円なら月5万字。慣れると1記事2〜3時間で書けます<span class="len">28</span></dd><dt>はじめる費用</dt><dd>0円（PCがあれば）<span class="len">10</span></dd><dt>売る場所</dt><dd>クラウドワークス / ランサーズ / Xで直接依頼<span class="len">25</span></dd></dl></div>
-<dl class="rows"><dt>最初の一歩</dt><dd>クラウドソーシングで、1件だけ応募してみる<span class="len">21</span></dd><dt>いるもの</dt><dd>PC / 納期を守れること<span class="len">13</span></dd><dt>AIの使いどころ</dt><dd>ありふれた記事はAIに置き換わりつつあります。台本や監修に寄せると強いです。<span class="len">38</span></dd><dt>正直なところ</dt><dd>いちばん早く現金になりやすい分野のひとつです。<span class="len">23</span></dd></dl>
+<div class="howto"><div class="yen-h">最初の一歩</div><ol><li><b>クラウドワークスに登録する（無料・15分）</b><span>本人確認まで済ませる。未確認だと選ばれにくくなります</span></li><li><b>プロフィールの1行目に「何が書けるか」を具体的に</b><span>「元・美容師。ヘアケアの記事が書けます」。経験は誰にでもあります</span></li><li><b>「未経験者歓迎」の記事作成案件を10件ブックマークする</b><span>タスク形式ではなくプロジェクト形式を選ぶ。単価が違います</span></li><li><b>提案文は毎回書き直す</b><span>使い回しは落ちます。冒頭で募集文のどこに反応したかを1文入れる</span></li><li><b>10件応募する</b><span>1〜2件で決まらないのが普通。最初の採用まで10件が目安です</span></li></ol></div>
+<dl class="rows"><dt>いるもの</dt><dd>PC / 納期を守れること<span class="len">13</span></dd><dt>AIの使いどころ</dt><dd>ありふれた記事はAIに置き換わりつつあります。台本や監修に寄せると強いです。<span class="len">38</span></dd><dt>正直なところ</dt><dd>いちばん早く現金になりやすい分野のひとつです。<span class="len">23</span></dd></dl>
 <p class="w">効く持ち味：やりきり×3・つたえ×2・しらべ×2</p>
 </div></div><h3 class="sub">🤝 スキル販売<span class="count">4</span></h3><div class="grid"><div class="card">
 <h3>コンサル</h3>
 <p class="catch">専門知識や経験を使って、相手の課題解決を手伝います。</p>
 <div class="yen"><div class="yen-h">お金のこと</div>
 <dl class="rows"><dt>いくらになる</dt><dd>1時間5,000〜30,000円。月額の顧問なら月3〜10万円<span class="len">31</span></dd><dt>最初の1円まで</dt><dd>1〜3ヶ月。1件目は知人にお願いして、実績を作るのが早道<span class="len">28</span></dd><dt>月5万円にするなら</dt><dd>時給1万円なら月5時間。件数より単価で伸ばす種類の仕事です<span class="len">29</span></dd><dt>はじめる費用</dt><dd>0円。資料を作るソフトがあれば十分です<span class="len">19</span></dd><dt>売る場所</dt><dd>知人紹介 / ココナラ / X経由の問い合わせ<span class="len">23</span></dd></dl></div>
-<dl class="rows"><dt>最初の一歩</dt><dd>得意な分野で、知人1人の相談に無料で乗ってみる<span class="len">23</span></dd><dt>いるもの</dt><dd>ひとつの分野の経験 / 話を整理する力<span class="len">19</span></dd><dt>AIの使いどころ</dt><dd>資料づくりと、現状分析の下ごしらえに使えます。<span class="len">23</span></dd><dt>正直なところ</dt><dd>単価が高い代わりに、実績と信用が要ります。まず1件つくるのが全てです。<span class="len">35</span></dd></dl>
+<div class="howto"><div class="yen-h">最初の一歩</div><ol><li><b>自分が人より詳しい分野を3つ書き出す</b><span>仕事でなくてもいい。転職・育児・資格・ゲームでも成り立ちます</span></li><li><b>その中で「相談されたことがある」ものを選ぶ</b><span>実際に聞かれた経験が、需要の証拠です</span></li><li><b>知人1人に、60分の相談を無料でやる</b><span>練習ではなく本番として。終わったら必ず感想をもらう</span></li><li><b>相談の流れを紙に書く</b><span>現状を聞く→整理する→選択肢を出す→次の一手を決める。型があると迷いません</span></li><li><b>感想をもらったら、値段を決める</b><span>1時間5,000円から。安すぎると相手も本気になりません</span></li></ol></div>
+<dl class="rows"><dt>いるもの</dt><dd>ひとつの分野の経験 / 話を整理する力<span class="len">19</span></dd><dt>AIの使いどころ</dt><dd>資料づくりと、現状分析の下ごしらえに使えます。<span class="len">23</span></dd><dt>正直なところ</dt><dd>単価が高い代わりに、実績と信用が要ります。まず1件つくるのが全てです。<span class="len">35</span></dd></dl>
 <p class="w">効く持ち味：みぬき×3・えがき×3・きづき×1</p>
 </div><div class="card">
 <h3>講師業</h3>
 <p class="catch">個人向けの教室や習いごとを、オンラインか対面で開きます。</p>
 <div class="yen"><div class="yen-h">お金のこと</div>
 <dl class="rows"><dt>いくらになる</dt><dd>90分の講座で3,000〜10,000円。マンツーマンなら1回5,000〜15,000円<span class="len">44</span></dd><dt>最初の1円まで</dt><dd>1ヶ月ほど。日付を決めて告知すれば、そこが締切になります<span class="len">28</span></dd><dt>月5万円にするなら</dt><dd>5,000円の講座に月10人。同じ内容を繰り返せるので、2回目からが楽になります<span class="len">40</span></dd><dt>はじめる費用</dt><dd>0円（オンラインなら）。ストアカは売上の20〜30%が手数料<span class="len">30</span></dd><dt>売る場所</dt><dd>ストアカ / こくちーず / Zoom＋自分の告知<span class="len">25</span></dd></dl></div>
-<dl class="rows"><dt>最初の一歩</dt><dd>教えられることを3つ書き出して、1つに丸をつける<span class="len">24</span></dd><dt>いるもの</dt><dd>教える内容 / 90分ぶんの構成<span class="len">16</span></dd><dt>AIの使いどころ</dt><dd>カリキュラムと教材の下書きを作れます。<span class="len">19</span></dd><dt>正直なところ</dt><dd>来てくれるのが2人でも実績になります。小さく1回開くのが正解です。<span class="len">33</span></dd></dl>
+<div class="howto"><div class="yen-h">最初の一歩</div><ol><li><b>教えられることを3つ書き、1つに丸をつける</b><span>絞らないと告知文が書けません</span></li><li><b>90分の目次を作る</b><span>導入10分・本編60分・質疑20分。埋まらなければ内容が足りていません</span></li><li><b>ストアカに登録するか、Zoomの予定を作る</b><span>場所を先に押さえる。日付が決まると準備が進みます</span></li><li><b>日付を決めて、SNSと知人に告知する</b><span>人が集まってから日付を決めると、永久に開催しません</span></li><li><b>2人来たら開催する</b><span>少なくていい。1回やった実績が次につながります</span></li></ol></div>
+<dl class="rows"><dt>いるもの</dt><dd>教える内容 / 90分ぶんの構成<span class="len">16</span></dd><dt>AIの使いどころ</dt><dd>カリキュラムと教材の下書きを作れます。<span class="len">19</span></dd><dt>正直なところ</dt><dd>来てくれるのが2人でも実績になります。小さく1回開くのが正解です。<span class="len">33</span></dd></dl>
 <p class="w">効く持ち味：しらべ×3・ささえ×2・つたえ×2</p>
 </div><div class="card">
 <h3>コンテンツ販売</h3>
 <p class="catch">自分の知識やノウハウを、教材や電子書籍として売ります（note、Kindle、Udemy など）。</p>
 <div class="yen"><div class="yen-h">お金のこと</div>
 <dl class="rows"><dt>いくらになる</dt><dd>note 500〜3,000円 / Kindle 1冊あたり印税200〜500円 / Udemy 2,000〜10,000円<span class="len">62</span></dd><dt>最初の1円まで</dt><dd>1〜2ヶ月。作る時間がそのまま最初の1円までの時間になります<span class="len">30</span></dd><dt>月5万円にするなら</dt><dd>1,000円のものを月50本。作り直さずに売り続けられるのが強みです<span class="len">34</span></dd><dt>はじめる費用</dt><dd>0円。表紙を外注するなら3,000〜10,000円<span class="len">25</span></dd><dt>売る場所</dt><dd>note / Kindle / Udemy / BASE<span class="len">28</span></dd></dl></div>
-<dl class="rows"><dt>最初の一歩</dt><dd>自分の手順やコツを、PDF1枚にまとめてみる<span class="len">22</span></dd><dt>いるもの</dt><dd>まとめる時間 / 売り場のアカウント<span class="len">18</span></dd><dt>AIの使いどころ</dt><dd>構成・図解・章立ては、AIが得意です。<span class="len">19</span></dd><dt>正直なところ</dt><dd>一度作れば売り続けられます。いちばん手離れがいい形です。<span class="len">28</span></dd></dl>
+<div class="howto"><div class="yen-h">最初の一歩</div><ol><li><b>自分がやっている手順を、そのまま書き出す</b><span>特別なノウハウでなくていい。知らない人には価値があります</span></li><li><b>PDF1枚にまとめる</b><span>いきなり本にしない。1枚で完結するものから</span></li><li><b>noteで無料公開して、反応を見る</b><span>読まれない内容は、有料にしても売れません</span></li><li><b>反応があったら、続きを有料にする</b><span>500〜1,500円から。最初は安く、実績を作る</span></li><li><b>売れたら、同じ形で2本目を作る</b><span>1本目の型を使い回せるのが、この道のいちばんの利点です</span></li></ol></div>
+<dl class="rows"><dt>いるもの</dt><dd>まとめる時間 / 売り場のアカウント<span class="len">18</span></dd><dt>AIの使いどころ</dt><dd>構成・図解・章立ては、AIが得意です。<span class="len">19</span></dd><dt>正直なところ</dt><dd>一度作れば売り続けられます。いちばん手離れがいい形です。<span class="len">28</span></dd></dl>
 <p class="w">効く持ち味：しらべ×3・えがき×2・こだわり×2</p>
 </div><div class="card">
 <h3>スポット相談・スキマスキル販売</h3>
 <p class="catch">小さなスキルを1回単位で提供します（ココナラ、ストアカ など）。</p>
 <div class="yen"><div class="yen-h">お金のこと</div>
 <dl class="rows"><dt>いくらになる</dt><dd>30分3,000〜10,000円。文章での相談なら1件1,000〜5,000円<span class="len">39</span></dd><dt>最初の1円まで</dt><dd>最短で1週間。出品したその週に依頼が来ることもあります<span class="len">27</span></dd><dt>月5万円にするなら</dt><dd>3,000円の枠を月17件。週4件ペースです<span class="len">22</span></dd><dt>はじめる費用</dt><dd>0円。ココナラは売上の22%が手数料<span class="len">18</span></dd><dt>売る場所</dt><dd>ココナラ / タイムチケット / MENTA<span class="len">22</span></dd></dl></div>
-<dl class="rows"><dt>最初の一歩</dt><dd>30分3,000円くらいの相談枠を、1つ出してみる<span class="len">25</span></dd><dt>いるもの</dt><dd>話せる時間帯 / サイトの登録<span class="len">15</span></dd><dt>AIの使いどころ</dt><dd>プロフィール文とサービス説明づくりに使えます。<span class="len">23</span></dd><dt>正直なところ</dt><dd>いちばんハードルが低い入口です。まず1件が自信になります。<span class="len">29</span></dd></dl>
+<div class="howto"><div class="yen-h">最初の一歩</div><ol><li><b>ココナラに登録する（無料・15分）</b><span>最低500円から出品できます</span></li><li><b>30分で人に教えられることを1つ決める</b><span>「Excelの関数」「履歴書の添削」でも成立します</span></li><li><b>似たサービスを5件見て、相場を確認する</b><span>ページの書き方も参考になります</span></li><li><b>最初の3〜5件は相場の半額で出す</b><span>実績とレビューが検索順位を決めます。ここは投資と割り切る</span></li><li><b>レビューが5件たまったら、正規の値段に戻す</b><span>ここが最もつらい区間。抜けると急に楽になります</span></li></ol></div>
+<dl class="rows"><dt>いるもの</dt><dd>話せる時間帯 / サイトの登録<span class="len">15</span></dd><dt>AIの使いどころ</dt><dd>プロフィール文とサービス説明づくりに使えます。<span class="len">23</span></dd><dt>正直なところ</dt><dd>いちばんハードルが低い入口です。まず1件が自信になります。<span class="len">29</span></dd></dl>
 <p class="w">効く持ち味：ささえ×3・きづき×2・みきり×2</p>
 </div></div><h3 class="sub">🧠 AI・テック<span class="count">6</span></h3><div class="grid"><div class="card">
 <h3>AI業務代行</h3>
 <p class="catch">中小企業の業務にAIを入れて、効率化や自動化を手伝います。</p>
 <div class="yen"><div class="yen-h">お金のこと</div>
 <dl class="rows"><dt>いくらになる</dt><dd>導入支援1件5〜30万円。月額の伴走なら月3〜10万円<span class="len">27</span></dd><dt>最初の1円まで</dt><dd>1〜3ヶ月。自分の職場で作った実例が、そのまま営業材料になります<span class="len">32</span></dd><dt>月5万円にするなら</dt><dd>月額5万円の会社を1社。数より継続で積むほうが安定します<span class="len">28</span></dd><dt>はじめる費用</dt><dd>AIツール代が月3,000〜10,000円<span class="len">21</span></dd><dt>売る場所</dt><dd>知人の会社 / 商工会 / X経由の問い合わせ<span class="len">23</span></dd></dl></div>
-<dl class="rows"><dt>最初の一歩</dt><dd>自分の仕事を1つAIで自動化して、手順を記録しておく<span class="len">26</span></dd><dt>いるもの</dt><dd>AIを触った経験 / 人に説明できること<span class="len">20</span></dd><dt>AIの使いどころ</dt><dd>この分野そのものがAI前提です。実例を持っている人が強い。<span class="len">29</span></dd><dt>正直なところ</dt><dd>需要が急に増えている分野。自分の職場での実例が、最強の営業材料になります。<span class="len">37</span></dd></dl>
+<div class="howto"><div class="yen-h">最初の一歩</div><ol><li><b>自分の仕事の中で、面倒な作業を3つ書き出す</b><span>議事録・報告書・メール返信など、時間を食っているもの</span></li><li><b>そのうち1つを、AIで実際に短くする</b><span>自分で試していないものは売れません</span></li><li><b>かかっていた時間と、短くなった時間を記録する</b><span>「3時間→20分」という数字が、そのまま営業材料になります</span></li><li><b>手順をスクショつきでまとめる</b><span>再現できる形にする。これが納品物の原型になります</span></li><li><b>身近な会社の人に、その事例を見せる</b><span>売り込まず「こんなことができました」と見せるだけでいい</span></li></ol></div>
+<dl class="rows"><dt>いるもの</dt><dd>AIを触った経験 / 人に説明できること<span class="len">20</span></dd><dt>AIの使いどころ</dt><dd>この分野そのものがAI前提です。実例を持っている人が強い。<span class="len">29</span></dd><dt>正直なところ</dt><dd>需要が急に増えている分野。自分の職場での実例が、最強の営業材料になります。<span class="len">37</span></dd></dl>
 <p class="w">効く持ち味：みぬき×3・えがき×2・わくわく×2</p>
 </div><div class="card">
 <h3>AIクリエイター</h3>
 <p class="catch">AIツールで動画・画像・記事などのコンテンツを作ります。</p>
 <div class="yen"><div class="yen-h">お金のこと</div>
 <dl class="rows"><dt>いくらになる</dt><dd>画像1枚500〜5,000円。動画1本10,000〜50,000円<span class="len">33</span></dd><dt>最初の1円まで</dt><dd>2週間〜1ヶ月。作ったものを見せられれば早いです<span class="len">24</span></dd><dt>月5万円にするなら</dt><dd>1枚2,000円なら月25枚。単価が上がるかは世界観の作り込み次第<span class="len">33</span></dd><dt>はじめる費用</dt><dd>AIツール代が月2,000〜10,000円<span class="len">21</span></dd><dt>売る場所</dt><dd>ココナラ / クラウドワークス / SNSからの直接依頼<span class="len">28</span></dd></dl></div>
-<dl class="rows"><dt>最初の一歩</dt><dd>AIで画像か動画を1本作って、公開してみる<span class="len">21</span></dd><dt>いるもの</dt><dd>AIツールの利用料 / 出力を選ぶ目<span class="len">18</span></dd><dt>AIの使いどころ</dt><dd>制作そのものがAI。差がつくのは指示の出し方と、選ぶ力です。<span class="len">30</span></dd><dt>正直なところ</dt><dd>入りやすいぶん、世界観やクオリティで差がつきます。<span class="len">25</span></dd></dl>
+<div class="howto"><div class="yen-h">最初の一歩</div><ol><li><b>AIツールを1つ決めて、課金する（月2,000円〜）</b><span>無料版は商用利用が制限されることがあります。先に確認を</span></li><li><b>毎日1枚、同じテーマで作る</b><span>量をこなさないと、指示の出し方が身につきません</span></li><li><b>10枚たまったら、良い3枚を選ぶ</b><span>選ぶ目が商品になります。全部出すと安く見えます</span></li><li><b>SNSに作品として出す</b><span>ここが営業になります。依頼はSNS経由が多い分野です</span></li><li><b>ココナラに出品する</b><span>1枚500〜5,000円から。まず3件を安めに受ける</span></li></ol></div>
+<dl class="rows"><dt>いるもの</dt><dd>AIツールの利用料 / 出力を選ぶ目<span class="len">18</span></dd><dt>AIの使いどころ</dt><dd>制作そのものがAI。差がつくのは指示の出し方と、選ぶ力です。<span class="len">30</span></dd><dt>正直なところ</dt><dd>入りやすいぶん、世界観やクオリティで差がつきます。<span class="len">25</span></dd></dl>
 <p class="w">効く持ち味：ひらめき×3・かたち×3・わくわく×2</p>
 </div><div class="card">
 <h3>プログラミング・開発</h3>
 <p class="catch">ツールやサービスを作ります。書く作業そのものはAIに任せられる時代です。</p>
 <div class="yen"><div class="yen-h">お金のこと</div>
 <dl class="rows"><dt>いくらになる</dt><dd>時給3,000〜10,000円。小さめの開発1件で5〜30万円<span class="len">31</span></dd><dt>最初の1円まで</dt><dd>1〜3ヶ月。動くものを1つ見せられるかどうかで変わります<span class="len">28</span></dd><dt>月5万円にするなら</dt><dd>時給5,000円なら月10時間。単価が高いので時間は少なく済みます<span class="len">33</span></dd><dt>はじめる費用</dt><dd>0円〜。サーバー代がかかっても月1,000円ほど<span class="len">24</span></dd><dt>売る場所</dt><dd>クラウドワークス / ランサーズ / Wantedly / 知人紹介<span class="len">34</span></dd></dl></div>
-<dl class="rows"><dt>最初の一歩</dt><dd>欲しい小さなツールを1つ、AIと一緒に作ってみる<span class="len">24</span></dd><dt>いるもの</dt><dd>PC / 動かしてみる根気<span class="len">13</span></dd><dt>AIの使いどころ</dt><dd>書くのはAI。人がやるのは要件を決めることと、AIの使いこなしです。<span class="len">34</span></dd><dt>正直なところ</dt><dd>作れると自分の道具が増えるので、ほかの副業にも効いてきます。<span class="len">30</span></dd></dl>
+<div class="howto"><div class="yen-h">最初の一歩</div><ol><li><b>自分が「面倒だ」と思っている作業を1つ選ぶ</b><span>人の課題より、自分の課題のほうが完成させやすい</span></li><li><b>AIに手順を聞きながら、動くものを作る</b><span>コードは書けなくていい。動かして直すことが仕事です</span></li><li><b>動いたら、GitHubに置く</b><span>見せられる場所が必要です。無料で使えます</span></li><li><b>使い方を書いた画面を1枚つける</b><span>動くだけでは伝わりません。説明があると評価が変わります</span></li><li><b>クラウドワークスで似た案件を10件見る</b><span>自分の作ったものが、いくらの仕事に近いか分かります</span></li></ol></div>
+<dl class="rows"><dt>いるもの</dt><dd>PC / 動かしてみる根気<span class="len">13</span></dd><dt>AIの使いどころ</dt><dd>書くのはAI。人がやるのは要件を決めることと、AIの使いこなしです。<span class="len">34</span></dd><dt>正直なところ</dt><dd>作れると自分の道具が増えるので、ほかの副業にも効いてきます。<span class="len">30</span></dd></dl>
 <p class="w">効く持ち味：みぬき×3・えがき×3・しらべ×2</p>
 </div><div class="card">
 <h3>Webデザイン</h3>
 <p class="catch">サイトや販売ページをデザインします。単純な作業はAIに置き換わりつつあります。</p>
 <div class="yen"><div class="yen-h">お金のこと</div>
 <dl class="rows"><dt>いくらになる</dt><dd>販売ページ1枚5〜30万円。バナー1枚3,000〜10,000円<span class="len">32</span></dd><dt>最初の1円まで</dt><dd>1〜2ヶ月。作品が3つあれば営業を始められます<span class="len">23</span></dd><dt>月5万円にするなら</dt><dd>販売ページ1本、またはバナー10枚ほど<span class="len">19</span></dd><dt>はじめる費用</dt><dd>デザインツール代が月1,000〜3,000円<span class="len">22</span></dd><dt>売る場所</dt><dd>ココナラ / クラウドワークス / 制作会社の下請け<span class="len">26</span></dd></dl></div>
-<dl class="rows"><dt>最初の一歩</dt><dd>架空の販売ページを1枚デザインして、作品として見せる<span class="len">26</span></dd><dt>いるもの</dt><dd>デザインの道具 / 見せられる作品<span class="len">17</span></dd><dt>AIの使いどころ</dt><dd>ラフ出しや素材づくりに使えます。方向性まで決められると強いです。<span class="len">32</span></dd><dt>正直なところ</dt><dd>作品が3つあれば営業できます。まず作って並べるのが先です。<span class="len">29</span></dd></dl>
+<div class="howto"><div class="yen-h">最初の一歩</div><ol><li><b>デザインツールを1つ決める（Figma・Canva等）</b><span>Figmaは無料。迷う時間がもったいない</span></li><li><b>好きなサイトを3つ選び、まねて作る</b><span>ゼロから考えない。模写がいちばん早い練習です</span></li><li><b>架空の店の販売ページを1枚作る</b><span>実在の依頼がなくても作品は作れます</span></li><li><b>作品を3つ並べたページを用意する</b><span>これがないと営業できません。バラバラだと見てもらえない</span></li><li><b>ココナラかクラウドワークスで、バナー案件から応募する</b><span>いきなり大きい案件を狙わない。小さく実績を作る</span></li></ol></div>
+<dl class="rows"><dt>いるもの</dt><dd>デザインの道具 / 見せられる作品<span class="len">17</span></dd><dt>AIの使いどころ</dt><dd>ラフ出しや素材づくりに使えます。方向性まで決められると強いです。<span class="len">32</span></dd><dt>正直なところ</dt><dd>作品が3つあれば営業できます。まず作って並べるのが先です。<span class="len">29</span></dd></dl>
 <p class="w">効く持ち味：こだわり×3・かたち×3・えがき×1</p>
 </div><div class="card">
 <h3>Webマーケティング・広告運用</h3>
 <p class="catch">広告の運用や集客の設計で、売上を伸ばします。</p>
 <div class="yen"><div class="yen-h">お金のこと</div>
 <dl class="rows"><dt>いくらになる</dt><dd>広告費の20%が相場。月30万円の広告を預かれば月6万円<span class="len">28</span></dd><dt>最初の1円まで</dt><dd>2〜4ヶ月。任せてもらうまでに信用が要ります<span class="len">22</span></dd><dt>月5万円にするなら</dt><dd>月25〜30万円の広告を1社ぶん。自分の発信の数字が実績になります<span class="len">33</span></dd><dt>はじめる費用</dt><dd>0円。ただし自分で試すぶんの広告費は別に見ておくと安心<span class="len">27</span></dd><dt>売る場所</dt><dd>知人紹介 / 代理店の下請け / X経由の問い合わせ<span class="len">26</span></dd></dl></div>
-<dl class="rows"><dt>最初の一歩</dt><dd>自分の発信で、1ヶ月だけ数字を記録して改善してみる<span class="len">25</span></dd><dt>いるもの</dt><dd>数字を追う習慣 / 小さくても実例<span class="len">17</span></dd><dt>AIの使いどころ</dt><dd>分析とレポートづくりが一気に速くなります。<span class="len">21</span></dd><dt>正直なところ</dt><dd>成果が数字で出るぶん、実績が作れれば単価は上がりやすい分野です。<span class="len">32</span></dd></dl>
+<div class="howto"><div class="yen-h">最初の一歩</div><ol><li><b>自分のSNSかブログを1つ選ぶ</b><span>人の広告を預かる前に、自分の数字で練習します</span></li><li><b>1ヶ月、毎週同じ曜日に数字を記録する</b><span>見た人・反応した人・クリック。3つだけでいい</span></li><li><b>数字を見て、翌週に1つだけ変える</b><span>一度に複数変えると、何が効いたか分かりません</span></li><li><b>1ヶ月ぶんの変化を1枚にまとめる</b><span>これが実績になります。小さくても構いません</span></li><li><b>身近な個人事業主に、その1枚を見せる</b><span>広告費を預かるには信用が要ります。数字が信用になります</span></li></ol></div>
+<dl class="rows"><dt>いるもの</dt><dd>数字を追う習慣 / 小さくても実例<span class="len">17</span></dd><dt>AIの使いどころ</dt><dd>分析とレポートづくりが一気に速くなります。<span class="len">21</span></dd><dt>正直なところ</dt><dd>成果が数字で出るぶん、実績が作れれば単価は上がりやすい分野です。<span class="len">32</span></dd></dl>
 <p class="w">効く持ち味：みぬき×3・えがき×2・やりきり×2</p>
 </div><div class="card">
 <h3>動画編集・動画ディレクション</h3>
 <p class="catch">動画の編集や、企画から関わる進行役をします。</p>
 <div class="yen"><div class="yen-h">お金のこと</div>
 <dl class="rows"><dt>いくらになる</dt><dd>YouTube10分の動画で3,000〜10,000円。ショートなら1本1,000〜3,000円<span class="len">48</span></dd><dt>最初の1円まで</dt><dd>3週間〜2ヶ月。作品を1本作って見せるところから<span class="len">24</span></dd><dt>月5万円にするなら</dt><dd>1本5,000円なら月10本。慣れると1本2〜3時間で終わります<span class="len">32</span></dd><dt>はじめる費用</dt><dd>編集ソフト代が月2,000〜3,000円。PCはある程度の性能が要ります<span class="len">36</span></dd><dt>売る場所</dt><dd>クラウドワークス / YouTuberへの直接営業 / X<span class="len">29</span></dd></dl></div>
-<dl class="rows"><dt>最初の一歩</dt><dd>5分の動画を1本編集して、作品として出す<span class="len">20</span></dd><dt>いるもの</dt><dd>編集ソフト / PC / 納期を守れること<span class="len">21</span></dd><dt>AIの使いどころ</dt><dd>カットとテロップはAIに寄っています。企画から関われる人が伸びます。<span class="len">34</span></dd><dt>正直なところ</dt><dd>案件が多く入りやすい入口。単価を上げるには企画側に回ることです。<span class="len">32</span></dd></dl>
+<div class="howto"><div class="yen-h">最初の一歩</div><ol><li><b>編集ソフトを入れる（月2,000円〜）</b><span>PCの性能が要ります。スマホだけでは案件は厳しい</span></li><li><b>YouTubeにある素材で、5分の動画を1本作る</b><span>カット・テロップ・BGMまで。まず1本通す</span></li><li><b>作った動画を、そのまま作品として出す</b><span>完璧を待たない。1本あれば営業を始められます</span></li><li><b>クラウドワークスで動画編集の募集を10件見る</b><span>求められる作業と単価が分かります</span></li><li><b>YouTuberに直接、作品を添えて連絡する</b><span>クラウドソーシングより単価が高くなりやすい入口です</span></li></ol></div>
+<dl class="rows"><dt>いるもの</dt><dd>編集ソフト / PC / 納期を守れること<span class="len">21</span></dd><dt>AIの使いどころ</dt><dd>カットとテロップはAIに寄っています。企画から関われる人が伸びます。<span class="len">34</span></dd><dt>正直なところ</dt><dd>案件が多く入りやすい入口。単価を上げるには企画側に回ることです。<span class="len">32</span></dd></dl>
 <p class="w">効く持ち味：かたち×3・やりきり×2・こだわり×2</p>
 </div></div><h3 class="sub">🏠 番外編<span class="count">1</span></h3><div class="grid"><div class="card">
 <h3>不動産賃貸業</h3>
 <p class="catch">不動産を買って貸し、家賃収入を得ます。資産性があり、長期の安定収入が見込めます。</p>
 <div class="yen"><div class="yen-h">お金のこと</div>
 <dl class="rows"><dt>いくらになる</dt><dd>区分マンション1戸で、手元に残るのは月5,000〜30,000円くらい<span class="len">35</span></dd><dt>最初の1円まで</dt><dd>半年〜1年。物件を探して、融資を通して、入居がついてから<span class="len">28</span></dd><dt>月5万円にするなら</dt><dd>区分なら2〜3戸、または一棟。ただし空室と修繕で簡単に赤字にもなります<span class="len">35</span></dd><dt>はじめる費用</dt><dd>頭金100万円〜と融資。諸費用も物件価格の7〜10%かかります<span class="len">31</span></dd><dt>売る場所</dt><dd>不動産会社 / 楽待・健美家などの情報サイト<span class="len">22</span></dd></dl></div>
-<dl class="rows"><dt>最初の一歩</dt><dd>まず本を1冊読んで、仕組みとリスクをひととおり知る<span class="len">25</span></dd><dt>いるもの</dt><dd>まとまった自己資金 / 融資 / 長い目で見る姿勢<span class="len">25</span></dd><dt>AIの使いどころ</dt><dd>物件の比較や、収支の試算の下ごしらえに使えます。<span class="len">24</span></dd><dt>正直なところ</dt><dd>ほかの19個とは性質が違います。時間ではなくお金と信用を使う方法で、うまくいかなかったときの金額も大きくなります。じっくり学んでからにしてください。<span class="len">74</span></dd></dl>
+<div class="howto"><div class="yen-h">最初の一歩</div><ol><li><b>本を1冊読む（2,000円・1週間）</b><span>いちばん失敗の金額が大きい分野です。ここを飛ばさない</span></li><li><b>楽待や健美家で、物件を毎日10件見る</b><span>1ヶ月続けると相場の感覚がつきます。買わずに見るだけ</span></li><li><b>収支シミュレーションを自分で作る</b><span>家賃・ローン・管理費・修繕・空室。手元に残る額を計算する</span></li><li><b>自己資金がいくら出せるかを決める</b><span>生活費とは完全に分ける。ここが曖昧だと危険です</span></li><li><b>不動産会社に1社、話を聞きに行く</b><span>買わなくていい。融資が下りる条件を知るのが目的です</span></li></ol></div>
+<dl class="rows"><dt>いるもの</dt><dd>まとまった自己資金 / 融資 / 長い目で見る姿勢<span class="len">25</span></dd><dt>AIの使いどころ</dt><dd>物件の比較や、収支の試算の下ごしらえに使えます。<span class="len">24</span></dd><dt>正直なところ</dt><dd>ほかの19個とは性質が違います。時間ではなくお金と信用を使う方法で、うまくいかなかったときの金額も大きくなります。じっくり学んでからにしてください。<span class="len">74</span></dd></dl>
 <p class="w">効く持ち味：みぬき×3・えがき×2・やりきり×2</p>
 </div></div>
 </section><section id="steps">
-<h2><span class="num">⑧</span>9つのやること</h2>
+<h2><span class="num">⑨</span>9つのやること</h2>
 <p class="lead">3章 × 3つ。各章は「全タイプ共通1つ ＋ 道ごとに2つ」で構成しています。ホームには常に<b>次の1つだけ</b>出ます。</p>
 <h3 class="sub">第一章・きめる<span class="goal">やることを、ひとつに</span></h3><p class="common"><b>全タイプ共通</b>「誰に向けてやるか」をひとことで書く</p><div class="grid"><div class="card small"><h3>伝える道</h3><ul><li>発信する場所を1つだけ決める</li><li>プロフィールを一行だけ書き直す</li></ul></div><div class="card small"><h3>おしえる道</h3><ul><li>教えられそうなことを3つ書いて、1つに丸をつける</li><li>90分の目次をつくる</li></ul></div><div class="card small"><h3>よりそう道</h3><ul><li>扱うテーマを1つ決める</li><li>60分の流れを紙に書く</li></ul></div><div class="card small"><h3>みぬく道</h3><ul><li>診断する領域を1つに絞る</li><li>診断シートの型をつくる</li></ul></div><div class="card small"><h3>つくる道</h3><ul><li>得意なジャンルを1つに絞る</li><li>見せられる作品を3つ選ぶ</li></ul></div><div class="card small"><h3>まかせられる道</h3><ul><li>引き受けられることを3つ書く</li><li>プロフィールを埋める</li></ul></div><div class="card small"><h3>しかける道</h3><ul><li>やりたい企画を全部書いて、1つだけ選ぶ</li><li>開催日を先に決める</li></ul></div><div class="card small"><h3>まとめる道</h3><ul><li>まとめるテーマを1つに決める</li><li>手持ちの情報を1つの形に揃える</li></ul></div></div><h3 class="sub">第二章・だす<span class="goal">はじめて、世に出す</span></h3><p class="common"><b>全タイプ共通</b>出したものを、知ってる人3人に見せる</p><div class="grid"><div class="card small"><h3>伝える道</h3><ul><li>まず3本出す</li><li>反応がよかった1本を、もう一度書き直す</li></ul></div><div class="card small"><h3>おしえる道</h3><ul><li>体験会を1回ひらく（無料でOK）</li><li>来てくれた人に一言だけ感想をもらう</li></ul></div><div class="card small"><h3>よりそう道</h3><ul><li>知り合い3人にモニターの声をかける</li><li>セッションを1件やってみる</li></ul></div><div class="card small"><h3>みぬく道</h3><ul><li>モニター診断を1件やる</li><li>結果を1枚にまとめて渡す</li></ul></div><div class="card small"><h3>つくる道</h3><ul><li>出品ページをつくる</li><li>まず1件、安めに受ける</li></ul></div><div class="card small"><h3>まかせられる道</h3><ul><li>応募文のテンプレをつくる</li><li>5件だけ応募する</li></ul></div><div class="card small"><h3>しかける道</h3><ul><li>告知して、5人に声をかける</li><li>小さく1回ひらく</li></ul></div><div class="card small"><h3>まとめる道</h3><ul><li>まず3本まとめて出す</li><li>いちばん読まれたものを見つける</li></ul></div></div><h3 class="sub">第三章・うけとる<span class="goal">はじめての、ありがとう</span></h3><p class="common"><b>全タイプ共通</b>値段を決めて、どこかに書いておく</p><div class="grid"><div class="card small"><h3>伝える道</h3><ul><li>小さな有料のもの（記事 or 相談枠）を1つ置く</li><li>買ってくれそうな人に、直接ひとこと伝える</li></ul></div><div class="card small"><h3>おしえる道</h3><ul><li>5,000円の講座を、日付つきで告知する</li><li>来てくれた人に、次の案内をする</li></ul></div><div class="card small"><h3>よりそう道</h3><ul><li>感想をもとに、正規の値段を決める</li><li>モニターの人に、続けるか聞いてみる</li></ul></div><div class="card small"><h3>みぬく道</h3><ul><li>「◯◯診断」としてメニューにする</li><li>知り合い経由で、もう1件だけ声をかける</li></ul></div><div class="card small"><h3>つくる道</h3><ul><li>レビューをもらって、値段を上げる</li><li>リピート用のメニューを1つ作る</li></ul></div><div class="card small"><h3>まかせられる道</h3><ul><li>受けた1件を、期待より少し良く納品する</li><li>「続けて頼めますか」と聞いてみる</li></ul></div><div class="card small"><h3>しかける道</h3><ul><li>2回目を有料（1,000〜3,000円）でひらく</li><li>次の開催日を決めて、先に告知する</li></ul></div><div class="card small"><h3>まとめる道</h3><ul><li>まとめPDFを1,000円で置く</li><li>いつもの発信から、そこへの入口をつくる</li></ul></div></div>
+</section><section id="report">
+<h2><span class="num">⑩</span>報告と応援</h2>
+<p class="lead">ひとりで続けるのがいちばん折れやすいので、できたことを人に見せられる形にしています。<b>「続けている」「しんどい」も選べます</b>。数字が出ない時期こそ報告できないと続かないからです。</p>
+<div class="grid"><div class="card"><h3>✅ やった</h3><p class="catch">決めたことを、ひとつ終わらせた</p><p>ひとつ、片づきました。</p><p>決めたことを、やりました。</p></div><div class="card"><h3>📤 世に出した</h3><p class="catch">投稿した・出品した・応募した</p><p>世に出しました。ここがいちばん重い一歩です。</p><p>出しました。反応はこれからです。</p></div><div class="card"><h3>👀 反応がきた</h3><p class="catch">見られた・いいね・返信・問い合わせ</p><p>届きました。誰かが見ています。</p><p>反応がありました。ひとりではないです。</p></div><div class="card"><h3>🪙 お金になった</h3><p class="catch">金額は書かなくても大丈夫</p><p>はじめの一歩が、お金になりました。</p><p>受け取りました。ここまで来ました。</p></div><div class="card"><h3>🌱 続けている</h3><p class="catch">進みは無いけど、やめていない</p><p>やめていません。それがいちばん効きます。</p><p>続いています。数字より価値があります。</p></div><div class="card"><h3>🫧 しんどい</h3><p class="catch">立ち止まっているのも報告です</p><p>しんどい日も、記録に残ります。</p><p>止まっていても、消えたわけではありません。</p></div></div><p class="note">このカードを、応援してくれる人に送ってみてください。見てくれる人がいるだけで続きます。</p>
 </section><section id="voice">
-<h2><span class="num">⑨</span>キャラクターのひとこと</h2>
+<h2><span class="num">⑪</span>キャラクターのひとこと</h2>
 <p class="lead">設定や名前は画面に出しません。落ち着いた丁寧語で、急かさないことだけを守っています。</p>
 <dl class="rows voice"><dt>greetFirst</dt><dd>はじめまして。少しだけ、あなたのことを教えてください。</dd><dt>greetBack</dt><dd>おかえりなさい。<br>また来てくれましたね。<br>お疲れさまです。無理してませんか。<br>ゆっくりで大丈夫ですよ。</dd><dt>quizStart</dt><dd>深く考えなくて大丈夫です。ぱっと出たほうで。</dd><dt>quizMid</dt><dd>いい調子です。<br>あと少しですね。<br>なるほど。<br>メモしておきますね。</dd><dt>quizEnd</dt><dd>……見えてきました。</dd><dt>resultTop</dt><dd>わかりましたよ。あなたは、こういう人です。</dd><dt>noStep</dt><dd>すべて終わりましたね。……見事です。</dd><dt>doneStep</dt><dd>ひとつ、片づきましたね。<br>ちゃんと進んでます。<br>記録しておきました。<br>いい報告です。</dd><dt>skipDay</dt><dd>今日はここまでで大丈夫。ここは逃げませんから。</dd></dl>
 </section><section id="prompts">
-<h2><span class="num">⑩</span>AIに渡す文章（5種）</h2>
+<h2><span class="num">⑫</span>AIに渡す文章（5種）</h2>
 <p class="lead">ChatGPT や Claude にコピペする文章です。<b>「相手を絶対に否定しない」「新しいノウハウを増やさない」「一度に出す提案は1つだけ」</b>をAI側にも守らせています。（下の例では、人によって変わる部分を括弧で示しています）</p>
 <div class="card">
 <h3>🧭 まず何から？<span class="cat">今の自分に合う、最初の1つを決める</span></h3>

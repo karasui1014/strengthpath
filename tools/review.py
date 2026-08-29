@@ -11,7 +11,9 @@ e = lambda s: html.escape(str(s if s is not None else ''))
 n = lambda s: f'<span class="len">{len(str(s))}</span>'
 
 SECTIONS = []
+NUM = '①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮'
 def sec(sid, num, title, lead, body):
+    num = NUM[len(SECTIONS)]          # 並べた順に自動で振る
     SECTIONS.append((sid, num, title))
     return f'''<section id="{sid}">
 <h2><span class="num">{num}</span>{e(title)}</h2>
@@ -37,6 +39,21 @@ gates = ''.join(f'''<div class="card gate-{k}">
 S1 = sec('gate', '①', f'適性チェック（必須{D["GATE_CORE"]}問）',
     '最初に聞く3問（必須）と、追加1問。<b>気持ち</b>（変えたい・続けられる）と<b>余力</b>（時間・手放せる）を別々に測り、3つに分かれます。合計点ひとつで切ると「やる気はあるが時間がない人」を弾いてしまうため、2軸にしています。',
     gq + scale + '<h3 class="sub">判定の3パターン</h3>' + gates)
+
+R = D['REALITY']
+S11 = sec('reality', '⑪', '先に、正直なところを',
+    '甘い期待のまま始めると、思っていたのと違うところで折れます。実際の調査データを見せたうえで、'
+    '<b>必ず「だからこうする」までセットで書きます</b>。脅すためのページではありません。',
+    '<div class="grid">' + ''.join(
+        '<div class="card"><h3>%s</h3><p class="catch">%s</p><p>%s</p></div>'
+        % (e(f['n']), e(f['label']), e(f['note'])) for f in R['facts']) + '</div>'
+    + '<h3 class="sub">%s</h3><ul class="picks">' % e(R['quits']['title'])
+    + ''.join('<li>%s</li>' % e(x) for x in R['quits']['items'])
+    + '</ul><p class="note">%s</p>' % e(R['quits']['note'])
+    + '<h3 class="sub">%s</h3><div class="grid">' % e(R['keeps']['title'])
+    + ''.join('<div class="card"><h3>%s</h3><p>%s</p></div>'
+              % (e(k['t']), e(k['d'])) for k in R['keeps']['items'])
+    + '</div><p class="note">出典：%s</p>' % e(R['source']))
 
 # ---------- 2. 副業以外の道 ----------
 ways = ''.join(f'''<div class="card">
@@ -123,7 +140,8 @@ for ck, cv in D['JOB_CATS'].items():
 <div class="yen"><div class="yen-h">お金のこと</div>
 {rows([('いくらになる', j['unit']), ('最初の1円まで', j['firstYen']),
        ('月5万円にするなら', j['to5']), ('はじめる費用', j['cost']), ('売る場所', j['where'])])}</div>
-{rows([('最初の一歩', j['first']), ('いるもの', j['need']),
+<div class="howto"><div class="yen-h">最初の一歩</div><ol>{''.join('<li><b>%s</b><span>%s</span></li>' % (e(x[0]), e(x[1])) for x in j['steps'])}</ol></div>
+{rows([('いるもの', j['need']),
        ('AIの使いどころ', j['ai']), ('正直なところ', j['real'])])}
 <p class="w">効く持ち味：{e('・'.join(D['TRAITS'][k]['name'] + '×' + str(w) for k, w in j['w'].items()))}</p>
 </div>'''
@@ -145,6 +163,16 @@ for i, ch in enumerate(D['CHAPTERS']):
 S8 = sec('steps', '⑧', '9つのやること',
     '3章 × 3つ。各章は「全タイプ共通1つ ＋ 道ごとに2つ」で構成しています。ホームには常に<b>次の1つだけ</b>出ます。',
     steps)
+
+S12 = sec('report', '⑫', '報告と応援',
+    'ひとりで続けるのがいちばん折れやすいので、できたことを人に見せられる形にしています。'
+    '<b>「続けている」「しんどい」も選べます</b>。数字が出ない時期こそ報告できないと続かないからです。',
+    '<div class="grid">' + ''.join(
+        '<div class="card"><h3>%s %s</h3><p class="catch">%s</p>%s</div>'
+        % (e(k['emoji']), e(k['label']), e(k['hint']),
+           ''.join('<p>%s</p>' % e(w) for w in D['REPORT_WORDS'][k['id']]))
+        for k in D['REPORT_KINDS']) + '</div>'
+    + '<p class="note">%s</p>' % e(D['SHARE_NOTE']))
 
 # ---------- 9. ひとこと ----------
 voice = ''.join(
@@ -319,6 +347,15 @@ ul.popts li::before{{content:none !important}}
 ul.popts li{{background:var(--quiet);border-radius:7px;padding:7px 11px;font-size:13.5px}}
 ul.popts li:first-child,ul.popts li:last-child{{font-weight:700;background:var(--card);
   border:1px solid var(--line)}}
+
+.howto ol{{counter-reset:hs;list-style:none;display:grid;gap:7px;margin-top:8px}}
+.howto li{{counter-increment:hs;padding-left:28px;position:relative}}
+.howto li::before{{content:counter(hs);position:absolute;left:0;top:2px;width:19px;height:19px;
+  border-radius:50%;background:var(--acc);color:#fff;font-size:10.5px;font-weight:800;
+  display:grid;place-items:center}}
+.howto li b{{display:block;font-size:13.5px;line-height:1.6}}
+.howto li span{{display:block;font-size:12px;color:var(--dim);line-height:1.7}}
+.howto{{background:var(--quiet);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin:11px 0}}
 @media print{{ nav.toc{{display:none}} .wrap{{grid-template-columns:1fr}} section{{break-inside:avoid}} }}
 </style>
 
@@ -336,7 +373,7 @@ ul.popts li:first-child,ul.popts li:last-child{{font-weight:700;background:var(-
 </header>
 <nav class="toc">{toc}</nav>
 <main>
-{S1}{S2}{S3}{S4}{S5}{S6}{S7}{S8}{S9}{S10}
+{S1}{S11}{S2}{S3}{S4}{S5}{S6}{S7}{S8}{S12}{S9}{S10}
 </main>
 <footer>
 <p><b>言葉づかいの決めごと</b>　①相手を否定しない（「動けない」「原因」「弱み」は書かない）　②まず肯定してから軽く提案する　③頑張らせない（どこからでも「今日はここまで」に逃げられる）　④一度に出すのは1つだけ</p>
