@@ -380,7 +380,7 @@ function pickBody(item) {
   return `<h2 class="qtext">${esc(item.q.ask)}</h2>
     <div class="scale">
       ${item.q.opts.map(([code, label]) =>
-        `<button class="sc" data-pick="${code}">${esc(label)}</button>`).join('')}
+        `<button class="sc" data-style="${code}">${esc(label)}</button>`).join('')}
     </div>`;
 }
 
@@ -746,7 +746,7 @@ function vPeople() {
   return `<div class="soft">
       <div class="mini">伴走している人</div>
       <div class="people">
-        ${list.map(x => `<div class="person${x.id === S.activeId ? ' on' : ''}" data-pick="${x.id}">
+        ${list.map(x => `<div class="person${x.id === S.activeId ? ' on' : ''}" data-person="${x.id}">
           <span class="pav">${akariTag('normal', 38)}</span>
           <span class="pinfo"><b>${esc(x.name)}</b>
             <em>${x.result ? TYPES[x.result.type].name + '・' + doneCount(x) + '/' + totalCount(x) + '手' : 'まだ調べていません'}${x.id === S.selfId ? '・自分' : ''}</em></span>
@@ -841,7 +841,7 @@ function bind(p) {
     p.quiz.i++; save(); render();
   };
   on('[data-pair]', 'click', e => answerQuiz(+e.currentTarget.dataset.pair));
-  on('[data-pick]', 'click', e => answerQuiz(e.currentTarget.dataset.pick));
+  on('[data-style]', 'click', e => answerQuiz(e.currentTarget.dataset.style));
   on('[data-back]', 'click', () => { p.quiz.i = Math.max(0, p.quiz.i - 1); render(); });
   on('[data-pause]', 'click', () => { save(); go('home'); });
   on('[data-retake]', 'click', () => {
@@ -905,7 +905,7 @@ function bind(p) {
   on('[data-dark]', 'click', e => { S.dark = e.currentTarget.dataset.dark; render(); });
   on('[data-mode]', 'click', e => { S.mode = e.currentTarget.dataset.mode; render(); });
 
-  on('[data-pick]', 'click', e => { if (e.target.dataset.del) return; S.activeId = e.currentTarget.dataset.pick; go('home'); });
+  on('[data-person]', 'click', e => { if (e.target.dataset.del) return; S.activeId = e.currentTarget.dataset.person; go('home'); });
   on('[data-del]', 'click', e => {
     e.stopPropagation(); const id = e.currentTarget.dataset.del;
     if (!confirm(`${S.profiles[id].name} のデータを消します。よろしいですか？`)) return;

@@ -744,6 +744,39 @@ t('横スクロールが出る書き方をしていない', () => {
   ok(c.includes('overflow-x:auto') || c.includes('overflow-x: auto'), '横長要素の逃がし方が無い');
 });
 
+
+/* ================= 15. 押しても反応しない・変な所へ飛ぶ を防ぐ ================= */
+group('15. ボタンの取り違え（属性名の衝突）');
+const APP = read('assets/app.js');
+t('同じ data 属性に、2つ以上の処理が付いていない', () => {
+  /* 進みグセの選択肢と、コーチモードの相手選びが同じ data-pick を使っていて、
+     最後の1問を押すとプロフィールが切り替わりホームへ飛ばされていた。
+     同じ名前を2箇所で拾うと、押した瞬間に両方が走る。 */
+  const names = [...APP.matchAll(/on\('\[data-([a-z]+)\]'/g)].map(m => m[1]);
+  const dup = names.filter((n, i) => names.indexOf(n) !== i);
+  ok(dup.length === 0, `2つ以上の処理が付いている: ${[...new Set(dup)].join(', ')}`);
+  return `${new Set(names).size}種類の属性`;
+});
+t('画面に出しているのに、処理が付いていない属性がない', () => {
+  const used = new Set([...APP.matchAll(/\sdata-([a-z]+)="/g)].map(m => m[1]));
+  const handled = new Set([...APP.matchAll(/on\('\[data-([a-z]+)\]'/g)].map(m => m[1]));
+  /* 値を読むためだけに使っているものは除く */
+  const readOnly = new Set(['preset']);
+  const orphan = [...used].filter(n => !handled.has(n) && !readOnly.has(n));
+  ok(orphan.length === 0, `押しても何も起きない: ${orphan.join(', ')}`);
+});
+t('処理はあるのに、画面に出していない属性がない', () => {
+  const used = new Set([...APP.matchAll(/\sdata-([a-z]+)="/g)].map(m => m[1]));
+  const handled = new Set([...APP.matchAll(/on\('\[data-([a-z]+)\]'/g)].map(m => m[1]));
+  const dead = [...handled].filter(n => !used.has(n));
+  ok(dead.length === 0, `使われていない処理: ${dead.join(', ')}`);
+});
+t('進みグセの選択肢と、相手選びが別の属性になっている', () => {
+  ok(APP.includes('data-style="'), '進みグセの選択肢が無い');
+  ok(APP.includes('data-person="'), '相手選びが無い');
+  ok(!APP.includes('data-pick'), 'ぶつかっていた古い名前が残っている');
+});
+
 /* ================= 結果 ================= */
 const total = pass + fail;
 console.log(`\n${C.b}${'─'.repeat(52)}${C.x}`);
