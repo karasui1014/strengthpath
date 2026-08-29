@@ -387,3 +387,30 @@ h1, h2, h3, p, li, summary,
   .seg{min-height:44px}
   .tile{min-height:76px}
 }
+
+/* ===== 最初の一歩（手順） ===== */
+.howto{background:var(--soft);border-radius:12px;padding:14px 16px;margin:12px 0}
+.howto-h{font-size:11px;font-weight:800;letter-spacing:.1em;color:var(--acc);margin-bottom:10px}
+.howto ol{counter-reset:hs;list-style:none;display:grid;gap:9px}
+.howto li{counter-increment:hs;padding-left:30px;position:relative}
+.howto li::before{content:counter(hs);position:absolute;left:0;top:2px;
+  width:21px;height:21px;border-radius:50%;background:var(--acc);color:#fff;
+  font-size:11px;font-weight:800;display:grid;place-items:center}
+.howto li b{display:block;font-size:14.5px;line-height:1.6}
+.howto li span{display:block;font-size:12.5px;color:var(--dim);line-height:1.7;margin-top:1px}
+
+/* ===== 先に、正直なところを ===== */
+.facts{display:grid;gap:10px;margin-bottom:12px}
+.fact{background:var(--card);border:1px solid var(--line);border-radius:14px;
+  padding:16px 18px;box-shadow:var(--shadow)}
+.fact b{display:block;font-size:30px;line-height:1.2;color:var(--acc);
+  font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.fact .fl{display:block;font-size:12.5px;font-weight:700;color:var(--dim);margin:2px 0 8px}
+.fact p{font-size:13.5px;line-height:1.8;margin:0}
+.quits{list-style:none;display:grid;gap:7px;margin:10px 0 12px}
+.quits li{background:var(--card);border:1px solid var(--line);border-radius:10px;
+  padding:11px 14px 11px 34px;font-size:13.5px;line-height:1.7;position:relative}
+.quits li::before{content:'…';position:absolute;left:14px;top:10px;color:var(--dim)}
+.keep{border-left:3px solid var(--acc)}
+.keep h3{font-size:15.5px;margin-bottom:4px}
+.keep p{font-size:13.5px;color:var(--dim)}

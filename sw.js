@@ -1,6 +1,6 @@
 /* StrengthPath Service Worker
    ⚠️ ファイルを更新したら必ず CACHE のバージョンを上げること */
-const CACHE = 'strengthpath-v11';
+const CACHE = 'strengthpath-v12';
 const ASSETS = ['./','./index.html','./manifest.json',
   './assets/style.css','./assets/data.js','./assets/akari.js','./assets/app.js',
   './assets/akari/normal.png','./assets/akari/think.png','./assets/akari/surprised.png',

@@ -234,7 +234,7 @@ function go(v) { view = v; showAll = false; window.scrollTo(0, 0); render(); }
 function render() {
   applyTheme();
   const p = P();
-  const map = { home: vHome, gate: vGate, gateResult: vGateResult, other: vOther,
+  const map = { home: vHome, gate: vGate, gateResult: vGateResult, other: vOther, reality: vReality,
                 quiz: vQuiz, clues: vClues, jobs: vJobs, book: vBook,
                 buddy: vBuddy, settings: vSettings, people: vPeople };
   $('#view').innerHTML = (map[view] || vHome)(p);
@@ -428,6 +428,7 @@ function vClues(p) {
     <button class="btn ghost wide" data-nav="jobs">20コぜんぶ見る</button>
 
     <button class="btn xl" data-nav="book">やることを見る</button>
+    <button class="btn link wide" data-nav="reality">先に、正直なところを読んでおく</button>
     ${installCard()}
     ${p.depth === 'full' ? '' : `<div class="soft deepen">
       <div class="mini">もっと正確にしたい人だけ</div>
@@ -521,6 +522,38 @@ function vOther(p) {
     </div>`;
 }
 
+/* ========== 先に、正直なところを ==========
+   甘い期待のまま始めると、思っていたのと違うところで折れる。
+   数字を見せて目盛りを合わせ、そのうえで「だからこうする」まで必ず言う。 */
+function vReality(p) {
+  const R = REALITY;
+  return `${say('先に、しんどいところも見ておきましょう。知っておくと折れにくいです。', 'normal')}
+    <div class="big-card">
+      <div class="mini">${esc(R.title)}</div>
+      <h2>副業は、思ったほど早くは伸びません</h2>
+      <p>${esc(R.lead)}</p>
+    </div>
+
+    <div class="facts">
+      ${R.facts.map(f => `<div class="fact">
+        <b>${esc(f.n)}</b><span class="fl">${esc(f.label)}</span>
+        <p>${esc(f.note)}</p></div>`).join('')}
+    </div>
+
+    <div class="soft">
+      <div class="mini">${esc(R.quits.title)}</div>
+      <ul class="quits">${R.quits.items.map(x => `<li>${esc(x)}</li>`).join('')}</ul>
+      <p class="dim">${esc(R.quits.note)}</p>
+    </div>
+
+    <h3 class="sec">${esc(R.keeps.title)}</h3>
+    ${R.keeps.items.map(k => `<div class="soft keep">
+      <h3>${esc(k.t)}</h3><p>${esc(k.d)}</p></div>`).join('')}
+
+    <p class="fine">出典：${esc(R.source)}</p>
+    <button class="btn xl" data-nav="${p.result ? 'book' : 'gate'}">${p.result ? 'やることに戻る' : 'はじめる'}</button>`;
+}
+
 /* ========== しごと（副業カタログ） ========== */
 let jobCat = 'all', jobOpen = null;
 function vJobs(p) {
@@ -552,7 +585,10 @@ function vJobs(p) {
           <span class="jx">${open ? '−' : '＋'}</span>
         </button>
         ${open ? `<div class="job-b">
-          <div class="rx"><b>最初の一歩</b>${esc(j.first)}</div>
+          <div class="howto">
+            <div class="howto-h">最初の一歩</div>
+            <ol>${j.steps.map(([t, d]) => `<li><b>${esc(t)}</b><span>${esc(d)}</span></li>`).join('')}</ol>
+          </div>
 
           <div class="yen">
             <div class="yen-h">お金のこと</div>
@@ -590,6 +626,7 @@ function vBook(p) {
     </div>
 
     <button class="btn link wide" data-all="1">${showAll ? '閉じる' : 'ぜんぶ見る'}</button>
+    <button class="btn link wide" data-nav="reality">思ったより進まないと感じたら</button>
     ${showAll ? p.steps.map((c, i) => {
       const ci = CHAPTERS[i];
       return `<div class="soft">

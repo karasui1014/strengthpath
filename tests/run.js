@@ -28,7 +28,7 @@ vm.runInContext(FILES.map(read).join('\n') + `
   QALL, CORE_COUNT, EXTRA_COUNT, carrySteps, navHtml, vHome, vClues, vJobs, vBook, vBuddy, P,
   INSTALL, installCard, canInstall, isIOS, isStandalone,
   TRAITS, STYLES, TYPES, JOBS, JOB_CATS, GATES, CHAPTERS, PROMPTS, THEMES, VOICE,
-  Q_GATE, GATE_CORE, Q_PAIR, Q_STYLE_PICK, pairOptions, SCALE, OTHER_WAYS, COMMON_STEPS, TYPE_STEPS, LEARN_LINK, MONEY_NOTE, YEN_NOTE };`,
+  Q_GATE, GATE_CORE, Q_PAIR, Q_STYLE_PICK, pairOptions, SCALE, REALITY, vReality, OTHER_WAYS, COMMON_STEPS, TYPE_STEPS, LEARN_LINK, MONEY_NOTE, YEN_NOTE };`,
   ctx, { filename:'bundle.js' });
 const A = ctx.API;
 
@@ -775,6 +775,68 @@ t('進みグセの選択肢と、相手選びが別の属性になっている',
   ok(APP.includes('data-style="'), '進みグセの選択肢が無い');
   ok(APP.includes('data-person="'), '相手選びが無い');
   ok(!APP.includes('data-pick'), 'ぶつかっていた古い名前が残っている');
+});
+
+
+/* ================= 16. 最初の一歩の具体さ ================= */
+group('16. 最初の一歩（何をどう用意して、どう動くか）');
+t('全20コが5手順ある', () => {
+  A.JOBS.forEach(j => {
+    ok(Array.isArray(j.steps), `${j.name} に手順が無い`);
+    eq(j.steps.length, 5, j.name);
+    j.steps.forEach(([t2, d], i) => {
+      ok(t2 && t2.length >= 6, `${j.name} ${i+1}番目の行動が短い`);
+      ok(d && d.length >= 10, `${j.name} ${i+1}番目の補足が短い`);
+    });
+  });
+});
+t('どの手順も、動作を指す言い方で終わっている', () => {
+  /* 単語リストで判定すると言い回しを変えるたびに落ちるので、
+     文末が動詞かどうかだけを見る */
+  const verbEnd = /(る|す|く|つ|う|ぶ|む|ぬ|ぐ|に|を|で)$/;
+  A.JOBS.forEach(j => j.steps.forEach(([t2], i) => {
+    const head = t2.split(/（|\(/)[0].trim();
+    ok(verbEnd.test(head), `${j.name} ${i+1}番目が動作で終わっていない: ${head}`);
+  }));
+});
+t('手順に、具体的なサービス名か数字が入っている', () => {
+  A.JOBS.forEach(j => {
+    const txt = j.steps.map(s2 => s2.join(' ')).join(' ');
+    ok(/[0-9０-９]/.test(txt), `${j.name} の手順に数字が無い`);
+  });
+});
+t('抽象的な言い回しで終わっていない', () => {
+  const NG = ['がんばる', '意識する', '心がける', '検討する', '考えてみる'];
+  A.JOBS.forEach(j => j.steps.forEach(([t2], i) =>
+    NG.forEach(w => ok(!t2.includes(w), `${j.name} ${i+1}番目が抽象的: ${t2}`))));
+});
+
+/* ================= 17. 現実を先に伝える ================= */
+group('17. 甘くしない（先に正直なところを見せる）');
+t('実際の調査データが入っている', () => {
+  ok(A.REALITY.facts.length >= 3, '数字が少ない');
+  A.REALITY.facts.forEach(f => {
+    ok(/[0-9０-９]|半分|倍/.test(f.n), `量が伝わる表現になっていない: ${f.n}`);
+    ok(f.label && f.note && f.note.length > 15, `${f.n} の説明が薄い`);
+  });
+  return A.REALITY.facts.map(f => f.n).join(' / ');
+});
+t('出典が書いてある', () => {
+  ok(A.REALITY.source && A.REALITY.source.length > 10, '出典が無い');
+  return A.REALITY.source.slice(0, 26) + '…';
+});
+t('やめる理由が、能力のせいにされていない', () => {
+  ok(A.REALITY.quits.items.length >= 3);
+  ok(A.REALITY.quits.note.includes('才能がなかった') || A.REALITY.quits.note.includes('誰でも'),
+    '本人のせいに読める書き方になっている');
+});
+t('厳しい話のあとに、必ず対処が書いてある', () => {
+  ok(A.REALITY.keeps.items.length >= 3, '対処が少ない');
+  A.REALITY.keeps.items.forEach(k => ok(k.t && k.d && k.d.length > 20, `${k.t} の説明が薄い`));
+});
+t('現実の画面から、次に進む手がある', () => {
+  const h = A.vReality(A.blankProfile('x'));
+  ok(/data-nav="(gate|book)"/.test(h), '行き止まりになっている');
 });
 
 /* ================= 結果 ================= */
