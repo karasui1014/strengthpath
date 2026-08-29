@@ -76,7 +76,8 @@ function cleanProfile(raw) {
   }
   p.depth = pick1(raw.depth, ['core', 'full'], p.answers ? 'core' : null);
   p.logs = (Array.isArray(raw.logs) ? raw.logs : []).slice(-LIM.list)
-    .map(l => ({ date: str(l && l.date, 10), text: str(l && l.text) }))
+    .map(l => ({ date: str(l && l.date, 10), text: str(l && l.text),
+                 kind: REPORT_KINDS.some(k => k.id === (l && l.kind)) ? l.kind : 'did' }))
     .filter(l => l.date && l.text);
   p.sessions = (Array.isArray(raw.sessions) ? raw.sessions : []).slice(-LIM.list)
     .map(s => ({ date: str(s && s.date, 10), note: str(s && s.note), next: str(s && s.next) }))
@@ -234,7 +235,7 @@ function go(v) { view = v; showAll = false; window.scrollTo(0, 0); render(); }
 function render() {
   applyTheme();
   const p = P();
-  const map = { home: vHome, gate: vGate, gateResult: vGateResult, other: vOther, reality: vReality,
+  const map = { home: vHome, gate: vGate, gateResult: vGateResult, other: vOther, reality: vReality, report: vReport,
                 quiz: vQuiz, clues: vClues, jobs: vJobs, book: vBook,
                 buddy: vBuddy, settings: vSettings, people: vPeople };
   $('#view').innerHTML = (map[view] || vHome)(p);
@@ -288,6 +289,7 @@ function vHome(p) {
 
     <div class="grid2">
       <button class="tile" data-nav="clues"><em>${t.emoji}</em><b>${esc(t.name)}</b><span>あなたに向いてる道</span></button>
+      <button class="tile" data-nav="report"><em>📣</em><b>報告する</b><span>できたことを送る</span></button>
       <button class="tile" data-nav="jobs"><em>🧰</em><b>${esc(matchJobs(p.result.traits, 1)[0].job.name)}</b><span>相性のいい副業</span></button>
     </div>
     <div class="soft">
@@ -645,12 +647,103 @@ function vBook(p) {
         : 'ぜんぶ終わりました。受け取ってください。'}</p>
     </div>` : ''}
 
+    <button class="btn ghost wide" data-nav="report">できたことを報告する</button>
+
     <h3 class="sec">これまで ${timesMoved(p)}回</h3>
     <div class="soft">
       ${p.logs.length ? `<ul class="loglist">${p.logs.slice().reverse().slice(0, 40).map(l =>
-        `<li><span class="ld">${fmtDate(l.date)}</span><span class="lt">${esc(l.text)}</span></li>`).join('')}</ul>`
+        `<li><span class="ld">${fmtDate(l.date)}</span><span class="lt">${l.kind ? (REPORT_KINDS.find(k => k.id === l.kind) || {}).emoji + ' ' : ''}${esc(l.text)}</span></li>`).join('')}</ul>`
         : '<p class="dim">まだ真っ白です。1つ動いたら、ここに増えていきます。</p>'}
     </div>`;
+}
+
+/* ========== 報告する ==========
+   ひとりで続けるのがいちばん折れやすい。
+   できたことを人に見せられる形にして、外で応援をもらえるようにする。 */
+let reportKind = 'did';
+function vReport(p) {
+  if (!p.result) return notyet('動いた記録が、ここに増えていきます。');
+  const recent = p.logs.slice().reverse().slice(0, 5);
+  return `${say('できたことを、そのまま出しちゃいましょう。小さくて大丈夫です。', 'happy')}
+    <div class="big-card">
+      <div class="mini">今日はどれでしたか</div>
+      <div class="kinds">
+        ${REPORT_KINDS.map(k => `<button class="kind${reportKind === k.id ? ' on' : ''}" data-kind="${k.id}">
+          <em>${k.emoji}</em><b>${esc(k.label)}</b><span>${esc(k.hint)}</span></button>`).join('')}
+      </div>
+      <textarea id="rtext" rows="3" maxlength="200"
+        placeholder="${esc((REPORT_KINDS.find(k => k.id === reportKind) || {}).hint || '')}"></textarea>
+      <button class="btn xl" data-report="1">記録して、カードを作る</button>
+      <p class="note">記録はこの端末に残ります。カードは送ったときだけ相手に見えます。</p>
+    </div>
+    ${recent.length ? `<div class="soft">
+      <div class="mini">最近の報告</div>
+      <ul class="loglist">${recent.map(l => `<li>
+        <span class="ld">${fmtDate(l.date)}</span>
+        <span class="lt">${l.kind ? (REPORT_KINDS.find(k => k.id === l.kind) || {}).emoji + ' ' : ''}${esc(l.text)}</span>
+        <button class="reshare" data-reshare="${esc(l.date)}|${esc(l.text)}|${esc(l.kind || 'did')}">送る</button>
+      </li>`).join('')}</ul>
+    </div>` : ''}`;
+}
+
+/* 送れるカードの文面を組み立てる。画像ではなく文字にして、どのアプリにも貼れるようにする */
+function shareText(p, kind, text) {
+  const k = REPORT_KINDS.find(x => x.id === kind) || REPORT_KINDS[0];
+  const w = pick(REPORT_WORDS[kind] || REPORT_WORDS.did);
+  const t = p.result ? TYPES[p.result.type] : null;
+  const done = p.steps ? `${doneCount(p)}/${totalCount(p)}` : '';
+  return [
+    `${k.emoji} ${k.label}`,
+    text ? `「${text}」` : '',
+    '',
+    w,
+    '',
+    t ? `わたしの道：${t.name}（${t.sub}）` : '',
+    done ? `やること：${done}　これまで動いた回数：${timesMoved(p)}回` : '',
+    '',
+    '— StrengthPath'
+  ].filter(x => x !== null).join('\n').replace(/\n{3,}/g, '\n\n');
+}
+
+function openShare(p, kind, text) {
+  const body = shareText(p, kind, text);
+  const el = document.createElement('div');
+  el.className = 'sheet-wrap'; el.id = 'sheet';
+  el.innerHTML = `<div class="sheet share">
+    ${akariTag('happy', 64)}
+    <div class="mini">送れるカードができました</div>
+    <pre class="card">${esc(body)}</pre>
+    <button class="btn xl" id="share-send">送る</button>
+    <button class="btn ghost" id="share-copy">文字をコピー</button>
+    <p class="note">${esc(SHARE_NOTE)}</p>
+    <button class="btn link" id="sheet-no">閉じる</button>
+  </div>`;
+  document.body.appendChild(el);
+  requestAnimationFrame(() => el.classList.add('in'));
+  $('#share-send').onclick = async () => {
+    if (navigator.share) {
+      try { await navigator.share({ text: body }); } catch (_) {}
+    } else {
+      await copyText(body);
+      toast('コピーしました。貼って送ってください。', 'wink');
+    }
+  };
+  $('#share-copy').onclick = async e => {
+    await copyText(body);
+    e.currentTarget.textContent = '✅ コピーしました';
+    setTimeout(() => { e.currentTarget.textContent = '文字をコピー'; }, 1600);
+  };
+  $('#sheet-no').onclick = closeSheet;
+  el.onclick = e => { if (e.target === el) closeSheet(); };
+}
+
+async function copyText(s) {
+  try { await navigator.clipboard.writeText(s); }
+  catch (_) {
+    const ta = document.createElement('textarea');
+    ta.value = s; document.body.appendChild(ta); ta.select();
+    document.execCommand('copy'); ta.remove();
+  }
 }
 
 /* ========== そうだん（AI） ========== */
@@ -863,6 +956,17 @@ function bind(p) {
     jobOpen = jobOpen === id ? null : id; render();
   });
   on('[data-ext]', 'click', e => window.open(e.currentTarget.dataset.ext, '_blank', 'noopener'));
+  on('[data-kind]', 'click', e => { reportKind = e.currentTarget.dataset.kind; render(); });
+  on('[data-report]', 'click', () => {
+    const txt = (($('#rtext') || {}).value || '').trim();
+    p.logs.push({ date: today(), text: txt || (REPORT_KINDS.find(k => k.id === reportKind) || {}).label, kind: reportKind });
+    save(); render();
+    openShare(p, reportKind, txt);
+  });
+  on('[data-reshare]', 'click', e => {
+    const [, text, kind] = e.currentTarget.dataset.reshare.split('|');
+    openShare(p, kind, text);
+  });
   on('[data-install]', 'click', async () => {
     if (!installPrompt) return;
     installPrompt.prompt();
@@ -900,9 +1004,10 @@ function bind(p) {
     p.steps.forEach(c => c.items.forEach(x => {
       if (x.id === id) { x.done = true; x.at = today(); txt = x.text; }
     }));
-    p.logs.push({ date: today(), text: txt });
+    p.logs.push({ date: today(), text: txt, kind: 'did' });
     toast(pick(VOICE.doneStep), pick(['happy', 'wink']));
     render();
+    openShare(p, 'did', txt);
   });
   on('[data-step]', 'change', e => {
     const id = e.currentTarget.dataset.step, ck = e.currentTarget.checked;

@@ -28,7 +28,8 @@ vm.runInContext(FILES.map(read).join('\n') + `
   QALL, CORE_COUNT, EXTRA_COUNT, carrySteps, navHtml, vHome, vClues, vJobs, vBook, vBuddy, P,
   INSTALL, installCard, canInstall, isIOS, isStandalone,
   TRAITS, STYLES, TYPES, JOBS, JOB_CATS, GATES, CHAPTERS, PROMPTS, THEMES, VOICE,
-  Q_GATE, GATE_CORE, Q_PAIR, Q_STYLE_PICK, pairOptions, SCALE, REALITY, vReality, OTHER_WAYS, COMMON_STEPS, TYPE_STEPS, LEARN_LINK, MONEY_NOTE, YEN_NOTE };`,
+  Q_GATE, GATE_CORE, Q_PAIR, Q_STYLE_PICK, pairOptions, SCALE, REALITY, vReality,
+  REPORT_KINDS, REPORT_WORDS, SHARE_NOTE, vReport, shareText, OTHER_WAYS, COMMON_STEPS, TYPE_STEPS, LEARN_LINK, MONEY_NOTE, YEN_NOTE };`,
   ctx, { filename:'bundle.js' });
 const A = ctx.API;
 
@@ -837,6 +838,63 @@ t('厳しい話のあとに、必ず対処が書いてある', () => {
 t('現実の画面から、次に進む手がある', () => {
   const h = A.vReality(A.blankProfile('x'));
   ok(/data-nav="(gate|book)"/.test(h), '行き止まりになっている');
+});
+
+
+/* ================= 18. 報告と応援 ================= */
+group('18. 報告して、応援をもらう');
+t('報告の種類が6つあり、数字が出ない時期も選べる', () => {
+  eq(A.REPORT_KINDS.length, 6);
+  const ids = A.REPORT_KINDS.map(k => k.id);
+  ok(ids.includes('keep'), '「続けている」が無い');
+  ok(ids.includes('hard'), '「しんどい」が無い');
+  A.REPORT_KINDS.forEach(k => ok(k.emoji && k.label && k.hint, `${k.id} が不完全`));
+  return A.REPORT_KINDS.map(k => k.label).join(' / ');
+});
+t('どの種類にも、添える一言が用意されている', () => {
+  A.REPORT_KINDS.forEach(k => {
+    const w = A.REPORT_WORDS[k.id];
+    ok(Array.isArray(w) && w.length >= 1, `${k.id} の一言が無い`);
+    w.forEach(x => ok(x.length >= 8, `${k.id} の一言が短い`));
+  });
+});
+t('しんどい報告を、否定していない', () => {
+  const NG = ['ダメ', 'サボ', '甘え', '言い訳', '努力不足'];
+  [...A.REPORT_WORDS.hard, ...A.REPORT_WORDS.keep, A.REPORT_KINDS.find(k=>k.id==='hard').hint]
+    .forEach(x => NG.forEach(w => ok(!x.includes(w), `「${w}」が入っている: ${x}`)));
+  return A.REPORT_WORDS.hard[0];
+});
+t('送れるカードの文面ができる', () => {
+  const p = A.blankProfile('テスト');
+  p.result = quiz(fill(6,3)); p.steps = A.buildSteps(p.result.type);
+  p.logs = [{date:'2026-08-29', text:'出品した', kind:'out'}];
+  const card = A.shareText(p, 'out', '1件出品した');
+  ok(card.includes('1件出品した'), '書いた内容が入っていない');
+  ok(card.includes('StrengthPath'), '出どころが入っていない');
+  ok(card.length > 40 && card.length < 400, `長さが不適切（${card.length}字）`);
+  return `${card.length}字`;
+});
+t('金額を書かなくてもカードが作れる', () => {
+  const p = A.blankProfile('テスト');
+  p.result = quiz(fill(6,3)); p.steps = A.buildSteps(p.result.type);
+  const card = A.shareText(p, 'keep', '');
+  ok(card.length > 30, '空だとカードにならない');
+  ok(!/円/.test(card), '金額を求める書き方になっている');
+});
+t('診断前でも報告画面が行き止まりにならない', () => {
+  const h = A.vReport(A.blankProfile('x'));
+  ok(/data-nav="(gate|jobs)"/.test(h), '進む手が無い');
+});
+t('報告の種類が保存データで検証される', () => {
+  const c = A.cleanProfile({ name:'x',
+    logs:[{date:'2026-08-29', text:'あ', kind:'out'},
+          {date:'2026-08-29', text:'い', kind:'存在しない種類'}] });
+  eq(c.logs[0].kind, 'out');
+  eq(c.logs[1].kind, 'did', '知らない種類が既定値に落ちていない');
+});
+t('送る前に、応援を頼む言葉が添えてある', () => {
+  ok(A.SHARE_NOTE.includes('応援'), '応援を頼む一言が無い');
+  return A.SHARE_NOTE.slice(0, 26) + '…';
 });
 
 /* ================= 結果 ================= */

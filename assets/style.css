@@ -414,3 +414,24 @@ h1, h2, h3, p, li, summary,
 .keep{border-left:3px solid var(--acc)}
 .keep h3{font-size:15.5px;margin-bottom:4px}
 .keep p{font-size:13.5px;color:var(--dim)}
+
+/* ===== 報告する ===== */
+.kinds{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0 14px}
+.kind{background:var(--soft);border:1px solid var(--line);border-radius:13px;
+  padding:12px 12px;font-family:inherit;color:var(--fg);cursor:pointer;
+  display:grid;gap:1px;justify-items:start;text-align:left;transition:border-color .12s}
+.kind.on{border-color:var(--acc);background:color-mix(in srgb,var(--acc) 10%,var(--soft))}
+.kind em{font-size:19px;font-style:normal;line-height:1.2}
+.kind b{font-size:14px}
+.kind span{font-size:11px;color:var(--dim);line-height:1.55}
+.reshare{background:none;border:0;color:var(--acc);font-size:12px;font-weight:700;
+  font-family:inherit;cursor:pointer;padding:4px 6px;flex:0 0 auto}
+
+/* 送れるカード */
+.sheet.share{text-align:left}
+.sheet.share .akari{margin:0 auto 10px}
+.sheet.share .mini{text-align:center}
+.card{background:var(--soft);border:1px solid var(--line);border-radius:12px;
+  padding:15px 17px;font-size:13.5px;line-height:1.9;white-space:pre-wrap;
+  font-family:inherit;margin:10px 0 4px;max-height:38vh;overflow-y:auto}
+.sheet.share .btn.ghost{width:100%;margin-top:8px}
